@@ -1,5 +1,9 @@
 package zmq.socket.clientserver;
 
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.SocketBase;
 import zmq.Msg;
 import zmq.Ctx;
@@ -25,6 +29,7 @@ public class Server extends SocketBase
         private final Pipe pipe;
         private boolean active;
 
+        @SideEffectFree
         public Outpipe(Pipe pipe, boolean active)
         {
             this.pipe = pipe;
@@ -39,6 +44,7 @@ public class Server extends SocketBase
     //  algorithm. This value is the next ID to use (if not used already).
     private int nextRid;
 
+    @Impure
     public Server(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -52,6 +58,8 @@ public class Server extends SocketBase
         outpipes = new HashMap<>();
     }
 
+    @EnsuresCalledMethods(value="this.super", methods="destroy")
+    @Impure
     @Override
     protected void destroy()
     {
@@ -60,6 +68,7 @@ public class Server extends SocketBase
         super.destroy();
     }
 
+    @Impure
     @Override
     public void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -79,6 +88,7 @@ public class Server extends SocketBase
         fq.attach(pipe);
     }
 
+    @Impure
     @Override
     public void xpipeTerminated(Pipe pipe)
     {
@@ -88,12 +98,14 @@ public class Server extends SocketBase
         fq.terminated(pipe);
     }
 
+    @Impure
     @Override
     public void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     public void xwriteActivated(Pipe pipe)
     {
@@ -103,6 +115,7 @@ public class Server extends SocketBase
         out.active = true;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -139,6 +152,7 @@ public class Server extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -173,12 +187,14 @@ public class Server extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return fq.hasIn();
     }
 
+    @Pure
     @Override
     protected boolean xhasOut()
     {
@@ -188,12 +204,15 @@ public class Server extends SocketBase
         return true;
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     @Override
     protected boolean xdisconnectPeer(int routingId)
     {

@@ -1,5 +1,8 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -188,6 +191,7 @@ public class Options
     public Class<? extends IDecoder> decoder = null;
     public Class<? extends IEncoder> encoder = null;
 
+    @Impure
     @SuppressWarnings("deprecation")
     public boolean setSocketOpt(int option, Object optval)
     {
@@ -571,6 +575,7 @@ public class Options
         }
     }
 
+    @Impure
     private MsgAllocator allocator(Class<?> clazz)
     {
         try {
@@ -582,6 +587,7 @@ public class Options
         }
     }
 
+    @Impure
     private SelectorProviderChooser chooser(Class<?> clazz)
     {
         try {
@@ -596,6 +602,7 @@ public class Options
         }
     }
 
+    @Impure
     private <T> Class<? extends T> checkCustomCodec(Object optval, Class<T> type)
     {
         Class<?> clazz = (Class<?>) optval;
@@ -614,6 +621,7 @@ public class Options
         }
     }
 
+    @Impure
     private byte[] setCurveKey(int option, Object optval, ValueReference<Boolean> result)
     {
         if (optval == null) {
@@ -655,6 +663,7 @@ public class Options
         }
     }
 
+    @Pure
     @SuppressWarnings("deprecation")
     public Object getSocketOpt(int option)
     {
@@ -823,6 +832,7 @@ public class Options
         }
     }
 
+    @Pure
     public static boolean parseBoolean(int option, Object optval)
     {
         if (optval instanceof Boolean) {
@@ -834,6 +844,7 @@ public class Options
         throw new IllegalArgumentException(optval + " is neither an integer or a boolean for option " + option);
     }
 
+    @SideEffectFree
     public static String parseString(int option, Object optval)
     {
         if (optval instanceof String) {
@@ -845,6 +856,7 @@ public class Options
         throw new IllegalArgumentException(optval + " is neither a string or an array of bytes for option " + option);
     }
 
+    @SideEffectFree
     public static byte[] parseBytes(int option, Object optval)
     {
         if (optval instanceof String) {

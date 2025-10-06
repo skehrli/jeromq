@@ -1,5 +1,7 @@
 package zmq.socket.radiodish;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -25,6 +27,7 @@ public class Radio extends SocketBase
     private final Map<String, List<Pipe>> subscriptions;
     private final Dist dist;
 
+    @Impure
     public Radio(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -35,6 +38,7 @@ public class Radio extends SocketBase
         dist = new Dist();
     }
 
+    @Impure
     @Override
     public void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -45,6 +49,7 @@ public class Radio extends SocketBase
         xreadActivated(pipe);
     }
 
+    @Impure
     @Override
     public void xreadActivated(Pipe pipe)
     {
@@ -71,12 +76,14 @@ public class Radio extends SocketBase
         }
     }
 
+    @Impure
     @Override
     public void xwriteActivated(Pipe pipe)
     {
         dist.activated(pipe);
     }
 
+    @Impure
     @Override
     public void xpipeTerminated(Pipe pipe)
     {
@@ -92,6 +99,7 @@ public class Radio extends SocketBase
         dist.terminated(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -115,6 +123,7 @@ public class Radio extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -124,6 +133,8 @@ public class Radio extends SocketBase
         throw new UnsupportedOperationException();
     }
 
+    @Pure
+    @Impure
     @Override
     protected boolean xhasOut()
     {
@@ -141,6 +152,7 @@ public class Radio extends SocketBase
         private State state;
         private Msg pending;
 
+        @Impure
         public RadioSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
                             final Address addr)
         {
@@ -149,6 +161,7 @@ public class Radio extends SocketBase
             state = State.GROUP;
         }
 
+        @Impure
         @Override
         public boolean pushMsg(Msg msg)
         {
@@ -194,6 +207,7 @@ public class Radio extends SocketBase
             return super.pushMsg(msg);
         }
 
+        @Impure
         @Override
         protected Msg pullMsg()
         {
@@ -224,6 +238,7 @@ public class Radio extends SocketBase
             return msg;
         }
 
+        @Impure
         @Override
         protected void reset()
         {

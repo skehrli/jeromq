@@ -1,5 +1,12 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
@@ -96,6 +103,7 @@ import zmq.util.function.Consumer;
  * <li>Elliptic curve authentication and encryption</li>
  * </ul>
  */
+@SuppressWarnings("purity.methodref")
 public class ZMQ
 {
     /**
@@ -347,6 +355,7 @@ public class ZMQ
 
     public static final Charset CHARSET = zmq.ZMQ.CHARSET;
 
+    @SideEffectFree
     private ZMQ()
     {
     }
@@ -357,11 +366,13 @@ public class ZMQ
      * @param ioThreads Number of threads to use, usually 1 is sufficient for most use cases.
      * @return the Context
      */
+    @Impure
     public static Context context(int ioThreads)
     {
         return new Context(ioThreads);
     }
 
+    @Impure
     @Deprecated
     public static boolean device(int type, Socket frontend, Socket backend)
     {
@@ -385,11 +396,13 @@ public class ZMQ
      *                 frontend and backend, to the capture socket. The capture socket should be a
      *                 ZMQ_PUB, ZMQ_DEALER, ZMQ_PUSH, or ZMQ_PAIR socket.
      */
+    @Impure
     public static boolean proxy(Socket frontend, Socket backend, Socket capture)
     {
         return zmq.ZMQ.proxy(frontend.base, backend.base, capture != null ? capture.base : null);
     }
 
+    @Impure
     public static boolean proxy(Socket frontend, Socket backend, Socket capture, Socket control)
     {
         return zmq.ZMQ.proxy(
@@ -399,11 +412,13 @@ public class ZMQ
                              control == null ? null : control.base);
     }
 
+    @Impure
     public static int poll(Selector selector, PollItem[] items, long timeout)
     {
         return poll(selector, items, items.length, timeout);
     }
 
+    @Impure
     public static int poll(Selector selector, PollItem[] items, int count, long timeout)
     {
         zmq.poll.PollItem[] pollItems = new zmq.poll.PollItem[count];
@@ -417,6 +432,7 @@ public class ZMQ
     /**
      * @return Major version number of the ZMQ library.
      */
+    @Pure
     public static int getMajorVersion()
     {
         return zmq.ZMQ.ZMQ_VERSION_MAJOR;
@@ -425,6 +441,7 @@ public class ZMQ
     /**
      * @return Major version number of the ZMQ library.
      */
+    @Pure
     public static int getMinorVersion()
     {
         return zmq.ZMQ.ZMQ_VERSION_MINOR;
@@ -433,6 +450,7 @@ public class ZMQ
     /**
      * @return Major version number of the ZMQ library.
      */
+    @Pure
     public static int getPatchVersion()
     {
         return zmq.ZMQ.ZMQ_VERSION_PATCH;
@@ -441,6 +459,8 @@ public class ZMQ
     /**
      * @return Full version number of the ZMQ library used for comparing versions.
      */
+    @Pure
+    @Impure
     public static int getFullVersion()
     {
         return zmq.ZMQ.makeVersion(zmq.ZMQ.ZMQ_VERSION_MAJOR, zmq.ZMQ.ZMQ_VERSION_MINOR, zmq.ZMQ.ZMQ_VERSION_PATCH);
@@ -452,6 +472,8 @@ public class ZMQ
      * @param patch Version patch component.
      * @return Comparible single int version number.
      */
+    @Pure
+    @Impure
     public static int makeVersion(final int major, final int minor, final int patch)
     {
         return zmq.ZMQ.makeVersion(major, minor, patch);
@@ -460,21 +482,25 @@ public class ZMQ
     /**
      * @return String version number in the form major.minor.patch.
      */
+    @Pure
     public static String getVersionString()
     {
         return "" + zmq.ZMQ.ZMQ_VERSION_MAJOR + "." + zmq.ZMQ.ZMQ_VERSION_MINOR + "." + zmq.ZMQ.ZMQ_VERSION_PATCH;
     }
 
+    @Impure
     public static void msleep(long millis)
     {
         zmq.ZMQ.msleep(millis);
     }
 
+    @Impure
     public static void sleep(long seconds)
     {
         zmq.ZMQ.sleep(seconds);
     }
 
+    @Impure
     public static void sleep(long amount, TimeUnit unit)
     {
         zmq.ZMQ.sleep(amount, unit);
@@ -531,18 +557,21 @@ public class ZMQ
         private final int code;
         private final String message;
 
+        @Impure
         Error(int code)
         {
             this.code = code;
             this.message = "errno " + code;
         }
 
+        @Impure
         Error(int code, String message)
         {
             this.code = code;
             this.message = message;
         }
 
+        @Pure
         public static Error findByCode(int code)
         {
             if (code <= 0) {
@@ -556,11 +585,13 @@ public class ZMQ
             }
         }
 
+        @Pure
         public int getCode()
         {
             return code;
         }
 
+        @Pure
         public String getMessage()
         {
             return message;
@@ -572,6 +603,7 @@ public class ZMQ
      * acting as the transport for inproc sockets,
      * which are the fastest way to connect threads in one process.
      */
+    @InheritableMustCall("close")
     public static class Context implements Closeable
     {
         private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -582,6 +614,7 @@ public class ZMQ
          *
          * @param ioThreads size of the threads pool to handle I/O operations.
          */
+        @Impure
         protected Context(int ioThreads)
         {
             ctx = zmq.ZMQ.init(ioThreads);
@@ -590,6 +623,8 @@ public class ZMQ
         /**
          * Returns true if terminate() has been called on ctx.
          */
+        @Pure
+        @Impure
         public boolean isTerminated()
         {
             return !ctx.isActive();
@@ -598,6 +633,8 @@ public class ZMQ
         /**
          * The size of the 0MQ thread pool to handle I/O operations.
          */
+        @Pure
+        @Impure
         public int getIOThreads()
         {
             return ctx.get(zmq.ZMQ.ZMQ_IO_THREADS);
@@ -607,6 +644,7 @@ public class ZMQ
          * Set the size of the 0MQ thread pool to handle I/O operations.
          * @throws IllegalStateException If context was already initialized by the creation of a socket
          */
+        @Impure
         public boolean setIOThreads(int ioThreads)
         {
             return ctx.set(zmq.ZMQ.ZMQ_IO_THREADS, ioThreads);
@@ -615,6 +653,8 @@ public class ZMQ
         /**
          * The maximum number of sockets allowed on the context
          */
+        @Pure
+        @Impure
         public int getMaxSockets()
         {
             return ctx.get(zmq.ZMQ.ZMQ_MAX_SOCKETS);
@@ -624,6 +664,7 @@ public class ZMQ
          * Sets the maximum number of sockets allowed on the context
          * @throws IllegalStateException If context was already initialized by the creation of a socket
          */
+        @Impure
         public boolean setMaxSockets(int maxSockets)
         {
             return ctx.set(zmq.ZMQ.ZMQ_MAX_SOCKETS, maxSockets);
@@ -632,32 +673,42 @@ public class ZMQ
         /**
          * @deprecated use {@link #isBlocky()} instead
          */
+        @Pure
+        @Impure
         @Deprecated
         public boolean getBlocky()
         {
             return isBlocky();
         }
 
+        @Pure
+        @Impure
         public boolean isBlocky()
         {
             return ctx.get(zmq.ZMQ.ZMQ_BLOCKY) != 0;
         }
 
+        @Impure
         public boolean setBlocky(boolean block)
         {
             return ctx.set(zmq.ZMQ.ZMQ_BLOCKY, block ? 1 : 0);
         }
 
+        @Pure
+        @Impure
         public boolean isIPv6()
         {
             return ctx.get(zmq.ZMQ.ZMQ_IPV6) != 0;
         }
 
+        @Pure
+        @Impure
         public boolean getIPv6()
         {
             return isIPv6();
         }
 
+        @Impure
         public boolean setIPv6(boolean ipv6)
         {
             return ctx.set(zmq.ZMQ.ZMQ_IPV6, ipv6 ? 1 : 0);
@@ -669,6 +720,7 @@ public class ZMQ
          * @param handler The object to use as this thread's uncaught exception handler. If null then this thread has no explicit handler.
          * @throws IllegalStateException If context was already initialized by the creation of a socket
          */
+        @Impure
         public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler)
         {
             ctx.setUncaughtExceptionHandler(handler);
@@ -677,6 +729,8 @@ public class ZMQ
         /**
          * @return The handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.
          */
+        @Pure
+        @Impure
         public UncaughtExceptionHandler getUncaughtExceptionHandler()
         {
             return ctx.getUncaughtExceptionHandler();
@@ -689,6 +743,7 @@ public class ZMQ
          * @param handler The object to use as this thread's handler for recoverable exceptions notifications.
          * @throws IllegalStateException If context was already initialized by the creation of a socket
          */
+        @Impure
         public void setNotificationExceptionHandler(UncaughtExceptionHandler handler)
         {
             ctx.setNotificationExceptionHandler(handler);
@@ -697,6 +752,8 @@ public class ZMQ
         /**
          * @return The handler invoked when a non-fatal exceptions is thrown in zmq.poll.Poller#run()
          */
+        @Pure
+        @Impure
         public UncaughtExceptionHandler getNotificationExceptionHandler()
         {
             return ctx.getNotificationExceptionHandler();
@@ -710,6 +767,7 @@ public class ZMQ
          * @param threadFactory the thread factory used by {@link zmq.poll.Poller}
          * @throws IllegalStateException If context was already initialized by the creation of a socket
          */
+        @Impure
         public void setThreadFactor(BiFunction<Runnable, String, Thread> threadFactory)
         {
             ctx.setThreadFactory(threadFactory);
@@ -718,6 +776,8 @@ public class ZMQ
         /**
          * @return the current thread factory
          */
+        @Pure
+        @Impure
         public BiFunction<Runnable, String, Thread> getThreadFactory()
         {
             return ctx.getThreadFactory();
@@ -727,6 +787,7 @@ public class ZMQ
          * This is an explicit "destructor". It can be called to ensure the corresponding 0MQ
          * Context has been disposed of.
          */
+        @Impure
         public void term()
         {
             if (closed.compareAndSet(false, true)) {
@@ -734,6 +795,7 @@ public class ZMQ
             }
         }
 
+        @Impure
         public boolean isClosed()
         {
             return closed.get();
@@ -753,11 +815,13 @@ public class ZMQ
          * @param type the socket type.
          * @return the newly created Socket.
          */
+        @Impure
         public Socket socket(SocketType type)
         {
             return new Socket(this, type);
         }
 
+        @Impure
         @Deprecated
         public Socket socket(int type)
         {
@@ -769,6 +833,8 @@ public class ZMQ
          *
          * @return the newly created Selector.
          */
+        @Impure
+        @NotOwning
         public Selector selector()
         {
             return ctx.createSelector();
@@ -781,6 +847,7 @@ public class ZMQ
          * @return true if the selector was closed. otherwise false
          * (mostly because it was not created by the context).
          */
+        @Impure
         public boolean close(Selector selector)
         {
             return ctx.closeSelector(selector);
@@ -792,6 +859,7 @@ public class ZMQ
          *
          * @return the newly created Poller.
          */
+        @Impure
         public Poller poller()
         {
             return new Poller(this);
@@ -804,6 +872,7 @@ public class ZMQ
          * @param size the poller initial size.
          * @return the newly created Poller.
          */
+        @Impure
         public Poller poller(int size)
         {
             return new Poller(this, size);
@@ -835,6 +904,7 @@ public class ZMQ
          * <li>close all sockets, before calling this method</li>
          * </ul>
          */
+        @Impure
         @Override
         public void close()
         {
@@ -902,6 +972,7 @@ public class ZMQ
      * </li>
      * </ul>
      */
+    @InheritableMustCall("close")
     public static class Socket implements Closeable
     {
         //  This port range is defined by IANA for dynamic or private ports
@@ -910,7 +981,7 @@ public class ZMQ
         private static final int DYNTO   = 0xffff;
 
         private final Consumer<Socket> socketClose;
-        private final SocketBase    base;
+        private final @Owning SocketBase    base;
         private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
         /**
@@ -919,6 +990,7 @@ public class ZMQ
          * @param context a 0MQ context previously created.
          * @param type    the socket type.
          */
+        @Impure
         protected Socket(Context context, SocketType type)
         {
             this(context.ctx, type.type, null);
@@ -930,6 +1002,7 @@ public class ZMQ
          * @param context a 0MQ context previously created.
          * @param type    the socket type.
          */
+        @Impure
         protected Socket(ZContext context, SocketType type)
         {
             this(context.getContext().ctx, type.type, context::closeSocket);
@@ -942,6 +1015,7 @@ public class ZMQ
          * @param type    the socket type.
          * @deprecated use {@link Socket#Socket(Context, SocketType)}
          */
+        @Impure
         @Deprecated
         protected Socket(Context context, int type)
         {
@@ -952,12 +1026,14 @@ public class ZMQ
          * Wrap an already existing socket
          * @param base an already generated socket
          */
-        protected Socket(SocketBase base)
+        @Impure
+        protected Socket(@Owning SocketBase base)
         {
             this.socketClose = s -> internalClose();
             this.base = base;
         }
 
+        @Impure
         private Socket(Ctx ctx, int type, Consumer<Socket> socketClose)
         {
             this.base = ctx.createSocket(type);
@@ -969,6 +1045,8 @@ public class ZMQ
          *
          * @return raw zmq.SocketBase
          */
+        @Pure
+        @NotOwning
         public SocketBase base()
         {
             return base;
@@ -979,12 +1057,15 @@ public class ZMQ
          * has been disposed of. If the socket was created from a org.zeromq.ZContext, it will remove
          * the reference to this socket from it.
          */
+        @SideEffectFree
+        @Impure
         @Override
         public void close()
         {
             socketClose.accept(this);
         }
 
+        @Impure
         void internalClose()
         {
             if (isClosed.compareAndSet(false, true)) {
@@ -999,6 +1080,7 @@ public class ZMQ
          *
          * @return the socket type.
          */
+        @Impure
         public int getType()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TYPE);
@@ -1011,6 +1093,7 @@ public class ZMQ
          *
          * @return the socket type as an enum.
          */
+        @Impure
         public SocketType getSocketType()
         {
             return SocketType.type(getType());
@@ -1020,6 +1103,8 @@ public class ZMQ
          *
          * @return the low level {@link Ctx} associated with this socket.
          */
+        @Pure
+        @Impure
         public Ctx getCtx()
         {
             return base.getCtx();
@@ -1036,11 +1121,13 @@ public class ZMQ
          * @return the linger period.
          * @see #setLinger(int)
          */
+        @Impure
         public int getLinger()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_LINGER);
         }
 
+        @Impure
         private boolean setSocketOpt(int option, Object value)
         {
             try {
@@ -1075,6 +1162,7 @@ public class ZMQ
          * @see #getLinger()
          * @deprecated the linger option has only integer range, use {@link #setLinger(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setLinger(long value)
         {
@@ -1102,6 +1190,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getLinger()
          */
+        @Impure
         public boolean setLinger(int value)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_LINGER, value);
@@ -1118,6 +1207,7 @@ public class ZMQ
          * @return the reconnectIVL.
          * @see #setReconnectIVL(int)
          */
+        @Impure
         public int getReconnectIVL()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RECONNECT_IVL);
@@ -1133,6 +1223,7 @@ public class ZMQ
          * @see #getReconnectIVL()
          * @deprecated reconnect interval option uses integer range, use {@link #setReconnectIVL(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setReconnectIVL(long value)
         {
@@ -1148,6 +1239,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getReconnectIVL()
          */
+        @Impure
         public boolean setReconnectIVL(int value)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_RECONNECT_IVL, value);
@@ -1162,6 +1254,7 @@ public class ZMQ
          * @return the the maximum length of the queue of outstanding peer connections.
          * @see #setBacklog(int)
          */
+        @Impure
         public int getBacklog()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_BACKLOG);
@@ -1178,6 +1271,7 @@ public class ZMQ
          * @see #getBacklog()
          * @deprecated this option uses integer range, use {@link #setBacklog(int)} instead.
          */
+        @Impure
         @Deprecated
         public boolean setBacklog(long value)
         {
@@ -1194,6 +1288,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getBacklog()
          */
+        @Impure
         public boolean setBacklog(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_BACKLOG, value);
@@ -1211,6 +1306,7 @@ public class ZMQ
          * @return the maximum handshake interval.
          * @see #setHandshakeIvl(int)
          */
+        @Impure
         public int getHandshakeIvl()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_HANDSHAKE_IVL);
@@ -1224,6 +1320,7 @@ public class ZMQ
          *
          * @return heartbeat interval in milliseconds
          */
+        @Impure
         public int getHeartbeatIvl()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_IVL);
@@ -1241,6 +1338,7 @@ public class ZMQ
          *
          * @return heartbeat timeout in milliseconds
          */
+        @Impure
         public int getHeartbeatTimeout()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_TIMEOUT);
@@ -1258,6 +1356,7 @@ public class ZMQ
          *
          * @return heartbeat time-to-live in milliseconds
          */
+        @Impure
         public int getHeartbeatTtl()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_TTL);
@@ -1273,6 +1372,7 @@ public class ZMQ
          *
          * @return the context to be sent with ping messages. Empty array by default.
          */
+        @Impure
         @Draft
         public byte[] getHeartbeatContext()
         {
@@ -1290,6 +1390,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getHandshakeIvl()
          */
+        @Impure
         public boolean setHandshakeIvl(int maxHandshakeIvl)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HANDSHAKE_IVL, maxHandshakeIvl);
@@ -1304,6 +1405,7 @@ public class ZMQ
          * @param heartbeatIvl heartbeat interval in milliseconds
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setHeartbeatIvl(int heartbeatIvl)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_IVL, heartbeatIvl);
@@ -1322,6 +1424,7 @@ public class ZMQ
          * @param heartbeatTimeout heartbeat timeout in milliseconds
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setHeartbeatTimeout(int heartbeatTimeout)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_TIMEOUT, heartbeatTimeout);
@@ -1340,6 +1443,7 @@ public class ZMQ
          * @param heartbeatTtl heartbeat time-to-live in milliseconds
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setHeartbeatTtl(int heartbeatTtl)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HEARTBEAT_TTL, heartbeatTtl);
@@ -1356,6 +1460,7 @@ public class ZMQ
          * @param pingContext the context to be sent with ping messages.
          * @return true if the option was set, otherwise false
          */
+        @Impure
         @Draft
         public boolean setHeartbeatContext(byte[] pingContext)
         {
@@ -1368,6 +1473,7 @@ public class ZMQ
          * @return the value of the Type-Of-Service set for the socket.
          * @see #setTos(int)
          */
+        @Impure
         public int getTos()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TOS);
@@ -1383,6 +1489,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getTos()
          */
+        @Impure
         public boolean setTos(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_TOS, value);
@@ -1398,6 +1505,7 @@ public class ZMQ
          * @return the reconnectIVLMax.
          * @see #setReconnectIVLMax(int)
          */
+        @Impure
         public int getReconnectIVLMax()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RECONNECT_IVL_MAX);
@@ -1414,6 +1522,7 @@ public class ZMQ
          * @see #getReconnectIVLMax()
          * @deprecated this option uses integer range, use {@link #setReconnectIVLMax(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setReconnectIVLMax(long value)
         {
@@ -1430,6 +1539,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getReconnectIVLMax()
          */
+        @Impure
         public boolean setReconnectIVLMax(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_RECONNECT_IVL_MAX, value);
@@ -1443,6 +1553,7 @@ public class ZMQ
          * @return the maxMsgSize.
          * @see #setMaxMsgSize(long)
          */
+        @Impure
         public long getMaxMsgSize()
         {
             return (Long) base.getSocketOptx(zmq.ZMQ.ZMQ_MAXMSGSIZE);
@@ -1456,6 +1567,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getMaxMsgSize()
          */
+        @Impure
         public boolean setMaxMsgSize(long value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_MAXMSGSIZE, value);
@@ -1473,6 +1585,7 @@ public class ZMQ
          * @return the SndHWM.
          * @see #setSndHWM(int)
          */
+        @Impure
         public int getSndHWM()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_SNDHWM);
@@ -1494,6 +1607,7 @@ public class ZMQ
          * @see #getSndHWM()
          * @deprecated this option uses integer range, use {@link #setSndHWM(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setSndHWM(long value)
         {
@@ -1516,6 +1630,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getSndHWM()
          */
+        @Impure
         public boolean setSndHWM(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SNDHWM, value);
@@ -1533,6 +1648,7 @@ public class ZMQ
          * @return the recvHWM period.
          * @see #setRcvHWM(int)
          */
+        @Impure
         public int getRcvHWM()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RCVHWM);
@@ -1551,6 +1667,7 @@ public class ZMQ
          * @see #getRcvHWM()
          * @deprecated this option uses integer range, use {@link #setRcvHWM(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setRcvHWM(long value)
         {
@@ -1570,6 +1687,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getRcvHWM()
          */
+        @Impure
         public boolean setRcvHWM(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_RCVHWM, value);
@@ -1579,6 +1697,7 @@ public class ZMQ
          * @return the High Water Mark.
          * @see #setHWM(int)
          */
+        @Pure
         @Deprecated
         public int getHWM()
         {
@@ -1599,6 +1718,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @deprecated this option uses integer range, use {@link #setHWM(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setHWM(long hwm)
         {
@@ -1621,6 +1741,7 @@ public class ZMQ
          * @param hwm the number of messages to queue.
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setHWM(int hwm)
         {
             boolean set = false;
@@ -1633,6 +1754,7 @@ public class ZMQ
          * @return the number of messages to swap at most.
          * @see #setSwap(long)
          */
+        @Pure
         @Deprecated
         public long getSwap()
         {
@@ -1651,6 +1773,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #isConflate()
          */
+        @Impure
         public boolean setConflate(boolean conflate)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CONFLATE, conflate);
@@ -1666,6 +1789,7 @@ public class ZMQ
          * @return true to keep only one message, false for standard behaviour.
          * @see #setConflate(boolean)
          */
+        @Impure
         public boolean isConflate()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_CONFLATE) != 0;
@@ -1681,6 +1805,7 @@ public class ZMQ
          * @return true to keep only one message, false for standard behaviour.
          * @see #setConflate(boolean)
          */
+        @Impure
         public boolean getConflate()
         {
             return isConflate();
@@ -1694,6 +1819,7 @@ public class ZMQ
          *
          * @param value The value of 'ZMQ_SWAP' defines the maximum size of the swap space in bytes.
          */
+        @Pure
         @Deprecated
         public boolean setSwap(long value)
         {
@@ -1704,6 +1830,7 @@ public class ZMQ
          * @return the affinity.
          * @see #setAffinity(long)
          */
+        @Impure
         public long getAffinity()
         {
             return (Long) base.getSocketOptx(zmq.ZMQ.ZMQ_AFFINITY);
@@ -1726,6 +1853,7 @@ public class ZMQ
          * @param value the io_thread affinity.
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setAffinity(long value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_AFFINITY, value);
@@ -1735,6 +1863,7 @@ public class ZMQ
          * @return the Identitiy.
          * @see #setIdentity(byte[])
          */
+        @Impure
         public byte[] getIdentity()
         {
             return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_IDENTITY);
@@ -1758,6 +1887,7 @@ public class ZMQ
          * @param identity
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setIdentity(byte[] identity)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_IDENTITY, identity);
@@ -1767,6 +1897,7 @@ public class ZMQ
          * @return the Rate.
          * @see #setRate(long)
          */
+        @Impure
         public long getRate()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RATE);
@@ -1779,6 +1910,7 @@ public class ZMQ
          * @param value maximum send or receive data rate for multicast, default 100
          * @return true if the option was set, otherwise false
          */
+        @Pure
         public boolean setRate(long value)
         {
             throw new UnsupportedOperationException();
@@ -1792,6 +1924,7 @@ public class ZMQ
          * @return the RecoveryIntervall.
          * @see #setRecoveryInterval(long)
          */
+        @Impure
         public long getRecoveryInterval()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RECOVERY_IVL);
@@ -1811,6 +1944,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getRecoveryInterval()
          */
+        @Pure
         public boolean setRecoveryInterval(long value)
         {
             throw new UnsupportedOperationException();
@@ -1829,6 +1963,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getReqCorrelate()
          */
+        @Impure
         public boolean setReqCorrelate(boolean correlate)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_REQ_CORRELATE, correlate);
@@ -1845,6 +1980,7 @@ public class ZMQ
          * @return state of the ZMQ_REQ_CORRELATE option.
          * @see #setReqCorrelate(boolean)
          */
+        @Pure
         @Deprecated
         public boolean getReqCorrelate()
         {
@@ -1865,6 +2001,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getReqRelaxed()
          */
+        @Impure
         public boolean setReqRelaxed(boolean relaxed)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_REQ_RELAXED, relaxed);
@@ -1883,6 +2020,7 @@ public class ZMQ
          * @return state of the ZMQ_REQ_RELAXED option.
          * @see #setReqRelaxed(boolean)
          */
+        @Pure
         @Deprecated
         public boolean getReqRelaxed()
         {
@@ -1893,6 +2031,7 @@ public class ZMQ
          * @return the Multicast Loop.
          * @see #setMulticastLoop(boolean)
          */
+        @Pure
         @Deprecated
         public boolean hasMulticastLoop()
         {
@@ -1909,6 +2048,7 @@ public class ZMQ
          *
          * @param multicastLoop
          */
+        @Pure
         @Deprecated
         public boolean setMulticastLoop(boolean multicastLoop)
         {
@@ -1919,6 +2059,7 @@ public class ZMQ
          * @return the Multicast Hops.
          * @see #setMulticastHops(long)
          */
+        @Impure
         public long getMulticastHops()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_MULTICAST_HOPS);
@@ -1931,6 +2072,7 @@ public class ZMQ
          *
          * @param value time-to-live field in every multicast packet, default 1
          */
+        @Pure
         public boolean setMulticastHops(long value)
         {
             throw new UnsupportedOperationException();
@@ -1947,6 +2089,7 @@ public class ZMQ
          * @return the Receive Timeout  in milliseconds.
          * @see #setReceiveTimeOut(int)
          */
+        @Impure
         public int getReceiveTimeOut()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RCVTIMEO);
@@ -1963,6 +2106,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getReceiveTimeOut()
          */
+        @Impure
         public boolean setReceiveTimeOut(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_RCVTIMEO, value);
@@ -1977,6 +2121,7 @@ public class ZMQ
          * @return the Send Timeout in milliseconds.
          * @see #setSendTimeOut(int)
          */
+        @Impure
         public int getSendTimeOut()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_SNDTIMEO);
@@ -1993,6 +2138,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getSendTimeOut()
          */
+        @Impure
         public boolean setSendTimeOut(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SNDTIMEO, value);
@@ -2005,6 +2151,7 @@ public class ZMQ
          * @param value The value of 'ZMQ_TCP_KEEPALIVE' to turn TCP keepalives on (1) or off (0).
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         @Deprecated
         public boolean setTCPKeepAlive(long value)
         {
@@ -2015,6 +2162,7 @@ public class ZMQ
          * @return the keep alive setting.
          * @see #setTCPKeepAlive(long)
          */
+        @Impure
         @Deprecated
         public long getTCPKeepAliveSetting()
         {
@@ -2028,6 +2176,7 @@ public class ZMQ
          * @param value The value of 'ZMQ_TCP_KEEPALIVE_CNT' defines the number of keepalives before death.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setTCPKeepAliveCount(long value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_CNT, Long.valueOf(value).intValue());
@@ -2037,6 +2186,7 @@ public class ZMQ
          * @return the keep alive count.
          * @see #setTCPKeepAliveCount(long)
          */
+        @Impure
         public long getTCPKeepAliveCount()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_CNT);
@@ -2050,6 +2200,7 @@ public class ZMQ
          *              dependent.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setTCPKeepAliveInterval(long value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_INTVL, Long.valueOf(value).intValue());
@@ -2059,6 +2210,7 @@ public class ZMQ
          * @return the keep alive interval.
          * @see #setTCPKeepAliveInterval(long)
          */
+        @Impure
         public long getTCPKeepAliveInterval()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_INTVL);
@@ -2072,6 +2224,7 @@ public class ZMQ
          *              over the socket and the first keepalive probe. Unit is OS dependent.
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setTCPKeepAliveIdle(long value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_IDLE, Long.valueOf(value).intValue());
@@ -2081,6 +2234,7 @@ public class ZMQ
          * @return the keep alive idle value.
          * @see #setTCPKeepAliveIdle(long)
          */
+        @Impure
         public long getTCPKeepAliveIdle()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE_IDLE);
@@ -2093,6 +2247,7 @@ public class ZMQ
          * @return the kernel send buffer size.
          * @see #setSendBufferSize(int)
          */
+        @Impure
         public int getSendBufferSize()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_SNDBUF);
@@ -2110,6 +2265,7 @@ public class ZMQ
          * @see #getSendBufferSize()
          * @deprecated this option uses integer range, use {@link #setSendBufferSize(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setSendBufferSize(long value)
         {
@@ -2127,6 +2283,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getSendBufferSize()
          */
+        @Impure
         public boolean setSendBufferSize(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SNDBUF, value);
@@ -2139,6 +2296,7 @@ public class ZMQ
          * @return the kernel receive buffer size.
          * @see #setReceiveBufferSize(int)
          */
+        @Impure
         public int getReceiveBufferSize()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RCVBUF);
@@ -2156,6 +2314,7 @@ public class ZMQ
          * @see #getReceiveBufferSize()
          * @deprecated this option uses integer range, use {@link #setReceiveBufferSize(int)} instead
          */
+        @Impure
         @Deprecated
         public boolean setReceiveBufferSize(long value)
         {
@@ -2173,6 +2332,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getReceiveBufferSize()
          */
+        @Impure
         public boolean setReceiveBufferSize(int value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_RCVBUF, value);
@@ -2187,6 +2347,7 @@ public class ZMQ
          *
          * @return true if there are more messages to receive.
          */
+        @Impure
         public boolean hasReceiveMore()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_RCVMORE) == 1;
@@ -2203,6 +2364,7 @@ public class ZMQ
          *
          * @return the underlying file descriptor.
          */
+        @Impure
         public SelectableChannel getFD()
         {
             return (SelectableChannel) base.getSocketOptx(zmq.ZMQ.ZMQ_FD);
@@ -2215,6 +2377,7 @@ public class ZMQ
          *
          * @return the mask of outstanding events.
          */
+        @Impure
         public int getEvents()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_EVENTS);
@@ -2233,6 +2396,7 @@ public class ZMQ
          * @param topic
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean subscribe(byte[] topic)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SUBSCRIBE, topic);
@@ -2251,6 +2415,7 @@ public class ZMQ
          * @param topic
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean subscribe(String topic)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SUBSCRIBE, topic);
@@ -2266,6 +2431,7 @@ public class ZMQ
          * @param topic
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean unsubscribe(byte[] topic)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_UNSUBSCRIBE, topic);
@@ -2281,6 +2447,7 @@ public class ZMQ
          * @param topic
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean unsubscribe(String topic)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_UNSUBSCRIBE, topic);
@@ -2292,6 +2459,7 @@ public class ZMQ
          * @param group the name of the group to join. Limited to 16 characters.
          * @return true if the group was no already joined, otherwise false.
          */
+        @Impure
         public boolean join(String group)
         {
             assert ("DISH".equals(base.typeString())) : "Only DISH sockets can join a group";
@@ -2304,6 +2472,7 @@ public class ZMQ
          * @param group the name of the group to leave. Limited to 16 characters.
          * @return false if the group was not joined before, otherwise true.
          */
+        @Impure
         public boolean leave(String group)
         {
             assert ("DISH".equals(base.typeString())) : "Only DISH sockets can leave a group";
@@ -2316,6 +2485,7 @@ public class ZMQ
          * @param cls
          * @return true if the option was set, otherwise false
          */
+        @Impure
         @Deprecated
         public boolean setEncoder(Class<? extends IEncoder> cls)
         {
@@ -2328,6 +2498,7 @@ public class ZMQ
          * @param cls
          * @return true if the option was set, otherwise false
          */
+        @Impure
         @Deprecated
         public boolean setDecoder(Class<? extends IDecoder> cls)
         {
@@ -2343,6 +2514,7 @@ public class ZMQ
          * @param threshold the threshold to set for the size limit of messages. 0 or negative to disable this system.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setMsgAllocationHeapThreshold(int threshold)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD, threshold);
@@ -2355,6 +2527,7 @@ public class ZMQ
          *
          * @return the threshold
          */
+        @Impure
         public int getMsgAllocationHeapThreshold()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD);
@@ -2366,6 +2539,7 @@ public class ZMQ
          * @param allocator the custom allocator.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setMsgAllocator(MsgAllocator allocator)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_MSG_ALLOCATOR, allocator);
@@ -2377,6 +2551,7 @@ public class ZMQ
          * @param chooser the custom chooser.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setSelectorChooser(SelectorProviderChooser chooser)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, chooser);
@@ -2387,6 +2562,7 @@ public class ZMQ
          *
          * @return the {@link java.nio.channels.spi.SelectorProvider} chooser.
          */
+        @Impure
         public SelectorProviderChooser getSelectorProviderChooser()
         {
             return (SelectorProviderChooser) base.getSocketOptx(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER);
@@ -2406,6 +2582,7 @@ public class ZMQ
          * @param rid the peer id of the next host.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setConnectRid(String rid)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CONNECT_RID, rid);
@@ -2425,6 +2602,7 @@ public class ZMQ
          * @param rid the peer id of the next host.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setConnectRid(byte[] rid)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CONNECT_RID, rid);
@@ -2442,6 +2620,7 @@ public class ZMQ
          * @param raw true to set the raw mode on the ROUTER.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setRouterRaw(boolean raw)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_ROUTER_RAW, raw);
@@ -2457,6 +2636,7 @@ public class ZMQ
          * @param probe true to send automatically an empty message when a new connection is made or accepted.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setProbeRouter(boolean probe)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_PROBE_ROUTER, probe);
@@ -2474,6 +2654,7 @@ public class ZMQ
          *                  A value of true returns an EHOSTUNREACH error code if the message cannot be routed.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setRouterMandatory(boolean mandatory)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_ROUTER_MANDATORY, mandatory);
@@ -2490,6 +2671,7 @@ public class ZMQ
          *                 A value of true, the ROUTER socket shall hand-over the connection to the new client and disconnect the existing one
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setRouterHandover(boolean handover)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_ROUTER_HANDOVER, handover);
@@ -2502,6 +2684,7 @@ public class ZMQ
          *                A value of true passes all subscription messages upstream.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setXpubVerbose(boolean verbose)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_XPUB_VERBOSE, verbose);
@@ -2515,16 +2698,19 @@ public class ZMQ
          * @param noDrop
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setXpubNoDrop(boolean noDrop)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_XPUB_NODROP, noDrop);
         }
 
+        @Impure
         public boolean setXpubManual(boolean manual)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_XPUB_MANUAL, manual);
         }
 
+        @Impure
         public boolean setXpubVerboser(boolean verboser)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_XPUB_VERBOSER, verboser);
@@ -2535,6 +2721,7 @@ public class ZMQ
          * @see #setIPv4Only (boolean)
          * @deprecated use {@link #isIPv6()} instead (inverted logic: ipv4 = true &lt;==&gt; ipv6 = false)
          */
+        @Impure
         @Deprecated
         public boolean getIPv4Only()
         {
@@ -2551,6 +2738,7 @@ public class ZMQ
          * @return the IPV6 configuration.
          * @see #setIPv6 (boolean)
          */
+        @Impure
         public boolean isIPv6()
         {
             return (Boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_IPV6);
@@ -2566,6 +2754,7 @@ public class ZMQ
          * @return the IPV6 configuration.
          * @see #setIPv6 (boolean)
          */
+        @Impure
         public boolean getIPv6()
         {
             return isIPv6();
@@ -2579,6 +2768,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @deprecated use {@link #setIPv6(boolean)} instead (inverted logic: ipv4 = true &lt;==&gt; ipv6 = false)
          */
+        @Impure
         @Deprecated
         public boolean setIPv4Only(boolean v4only)
         {
@@ -2599,6 +2789,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #isIPv6()
          */
+        @Impure
         public boolean setIPv6(boolean v6)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_IPV6, v6);
@@ -2608,6 +2799,7 @@ public class ZMQ
          * @return the keep alive setting.
          * @see #setTCPKeepAlive(int)
          */
+        @Impure
         public int getTCPKeepAlive()
         {
             return base.getSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE);
@@ -2620,6 +2812,7 @@ public class ZMQ
          * @param optVal The value of 'ZMQ_TCP_KEEPALIVE' to turn TCP keepalives on (1) or off (0).
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setTCPKeepAlive(int optVal)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_TCP_KEEPALIVE, optVal);
@@ -2629,6 +2822,7 @@ public class ZMQ
          * @see #setDelayAttachOnConnect(boolean)
          * @deprecated use {@link #setImmediate(boolean)} instead (inverted logic: immediate = true &lt;==&gt; delay attach on connect = false)
          */
+        @Impure
         @Deprecated
         public boolean getDelayAttachOnConnect()
         {
@@ -2646,6 +2840,7 @@ public class ZMQ
          * @return true if the option was set
          * @deprecated use {@link #setImmediate(boolean)} instead (warning, the boolean is inverted)
          */
+        @Impure
         @Deprecated
         public boolean setDelayAttachOnConnect(boolean value)
         {
@@ -2659,6 +2854,7 @@ public class ZMQ
          *
          * @see #setImmediate(boolean)
          */
+        @Impure
         public boolean isImmediate()
         {
             return (boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_IMMEDIATE);
@@ -2671,6 +2867,7 @@ public class ZMQ
          *
          * @see #setImmediate(boolean)
          */
+        @Impure
         public boolean getImmediate()
         {
             return isImmediate();
@@ -2689,6 +2886,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #isImmediate()
          */
+        @Impure
         public boolean setImmediate(boolean value)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_IMMEDIATE, value);
@@ -2705,6 +2903,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getSocksProxy()
          */
+        @Impure
         public boolean setSocksProxy(String proxy)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SOCKS_PROXY, proxy);
@@ -2721,6 +2920,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #getSocksProxy()
          */
+        @Impure
         public boolean setSocksProxy(byte[] proxy)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SOCKS_PROXY, proxy);
@@ -2733,6 +2933,7 @@ public class ZMQ
          * @return the SOCKS5 proxy address in string format
          * @see #setSocksProxy(byte[])
          */
+        @Impure
         public String getSocksProxy()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_SOCKS_PROXY);
@@ -2743,6 +2944,7 @@ public class ZMQ
          * The returned value will be a string in the form of a ZMQ DSN.
          * Note that if the TCP host is INADDR_ANY, indicated by a *, then the returned address will be 0.0.0.0 (for IPv4).
          */
+        @Impure
         public String getLastEndpoint()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_LAST_ENDPOINT);
@@ -2759,6 +2961,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #getZapDomain()
          */
+        @Impure
         public boolean setZapDomain(String domain)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_ZAP_DOMAIN, domain);
@@ -2775,6 +2978,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #getZapDomain()
          */
+        @Impure
         public boolean setZapDomain(byte[] domain)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_ZAP_DOMAIN, domain);
@@ -2787,6 +2991,7 @@ public class ZMQ
          * @return the domain of ZAP authentication
          * @see #setZapDomain(String)
          */
+        @Impure
         public String getZapDomain()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_ZAP_DOMAIN);
@@ -2803,6 +3008,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #getZapDomain()
          */
+        @Impure
         public boolean setZAPDomain(String domain)
         {
             return setZapDomain(domain);
@@ -2819,6 +3025,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #getZapDomain()
          */
+        @Impure
         public boolean setZAPDomain(byte[] domain)
         {
             return setZapDomain(domain);
@@ -2831,6 +3038,7 @@ public class ZMQ
          * @return the domain of ZAP authentication
          * @see #setZapDomain(String)
          */
+        @Impure
         public String getZAPDomain()
         {
             return getZapDomain();
@@ -2843,6 +3051,7 @@ public class ZMQ
          * @return the meta record name
          * @see #setSelfAddressPropertyName(String)
          */
+        @Impure
         public String getSelfAddressPropertyName()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_SELFADDR_PROPERTY_NAME);
@@ -2856,6 +3065,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #getSelfAddressPropertyName()
          */
+        @Impure
         public boolean setSelfAddressPropertyName(String recordName)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_SELFADDR_PROPERTY_NAME, recordName);
@@ -2873,6 +3083,7 @@ public class ZMQ
          * @see #isAsServerPlain()
          * @deprecated the naming is inconsistent with jzmq, please use {@link #setPlainServer(boolean)} instead
          */
+        @Impure
         @Deprecated
         public boolean setAsServerPlain(boolean server)
         {
@@ -2890,6 +3101,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false.
          * @see #isAsServerPlain()
          */
+        @Impure
         public boolean setPlainServer(boolean server)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_SERVER, server);
@@ -2902,6 +3114,7 @@ public class ZMQ
          * @see #setAsServerPlain(boolean)
          * @deprecated the naming is inconsistent with jzmq, please use {@link #getPlainServer()} instead
          */
+        @Impure
         @Deprecated
         public boolean isAsServerPlain()
         {
@@ -2915,6 +3128,7 @@ public class ZMQ
          * @see #setAsServerPlain(boolean)
          * @deprecated the naming is inconsistent with jzmq, please use {@link #getPlainServer()} instead
          */
+        @Impure
         @Deprecated
         public boolean getAsServerPlain()
         {
@@ -2927,6 +3141,7 @@ public class ZMQ
          * @return true if the role of the socket should be server for the PLAIN mechanism.
          * @see #setAsServerPlain(boolean)
          */
+        @Impure
         public boolean getPlainServer()
         {
             return (Boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_SERVER);
@@ -2940,6 +3155,7 @@ public class ZMQ
          * @param username the username to set.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setPlainUsername(String username)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_USERNAME, username);
@@ -2954,6 +3170,7 @@ public class ZMQ
          * @param password the password to set.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setPlainPassword(String password)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_PASSWORD, password);
@@ -2967,6 +3184,7 @@ public class ZMQ
          * @param username the username to set.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setPlainUsername(byte[] username)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_USERNAME, username);
@@ -2981,6 +3199,7 @@ public class ZMQ
          * @param password the password to set.
          * @return true if the option was set, otherwise false.
          */
+        @Impure
         public boolean setPlainPassword(byte[] password)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_PASSWORD, password);
@@ -2992,6 +3211,7 @@ public class ZMQ
          *
          * @return the plain username.
          */
+        @Impure
         public String getPlainUsername()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_USERNAME);
@@ -3004,6 +3224,7 @@ public class ZMQ
          *
          * @return the plain password.
          */
+        @Impure
         public String getPlainPassword()
         {
             return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_PASSWORD);
@@ -3023,6 +3244,7 @@ public class ZMQ
          * @see #isAsServerCurve()
          * @deprecated the naming is inconsistent with jzmq, please use {@link #setCurveServer(boolean)} instead
          */
+        @Impure
         @Deprecated
         public boolean setAsServerCurve(boolean server)
         {
@@ -3042,6 +3264,7 @@ public class ZMQ
          * @return true if the option was set
          * @see #isAsServerCurve()
          */
+        @Impure
         public boolean setCurveServer(boolean server)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SERVER, server);
@@ -3054,6 +3277,7 @@ public class ZMQ
          * @see #setAsServerCurve(boolean)
          * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead
          */
+        @Impure
         @Deprecated
         public boolean isAsServerCurve()
         {
@@ -3066,6 +3290,7 @@ public class ZMQ
          * @return true if the role of the socket should be server for CURVE mechanism.
          * @see #setAsServerCurve(boolean)
          */
+        @Impure
         public boolean getCurveServer()
         {
             return (boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVER);
@@ -3078,6 +3303,7 @@ public class ZMQ
          * @see #setAsServerCurve(boolean)
          * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead
          */
+        @Impure
         @Deprecated
         public boolean getAsServerCurve()
         {
@@ -3097,6 +3323,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getCurvePublicKey()
          */
+        @Impure
         public boolean setCurvePublicKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY, key);
@@ -3115,6 +3342,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getCurveServerKey()
          */
+        @Impure
         public boolean setCurveServerKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SERVERKEY, key);
@@ -3132,6 +3360,7 @@ public class ZMQ
          * @return true if the option was set, otherwise false
          * @see #getCurveSecretKey()
          */
+        @Impure
         public boolean setCurveSecretKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SECRETKEY, key);
@@ -3143,6 +3372,7 @@ public class ZMQ
          * @return key the curve public key
          * @see #setCurvePublicKey(byte[])
          */
+        @Impure
         public byte[] getCurvePublicKey()
         {
             return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY);
@@ -3154,6 +3384,7 @@ public class ZMQ
          * @return key the curve server key
          * @see #setCurveServerKey(byte[])
          */
+        @Impure
         public byte[] getCurveServerKey()
         {
             return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVERKEY);
@@ -3165,6 +3396,7 @@ public class ZMQ
          * @return key the curve secret key
          * @see #setCurveSecretKey(byte[])
          */
+        @Impure
         public byte[] getCurveSecretKey()
         {
             return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SECRETKEY);
@@ -3175,6 +3407,7 @@ public class ZMQ
          *
          * @return the current mechanism.
          */
+        @Impure
         public Mechanism getMechanism()
         {
             return Mechanism.find((Mechanisms) base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM));
@@ -3189,6 +3422,7 @@ public class ZMQ
          * @param helloMsg
          * @return true if the option was set, otherwise false
          */
+        @Impure
         public boolean setHelloMsg(byte[] helloMsg)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HELLO_MSG, helloMsg);
@@ -3200,6 +3434,7 @@ public class ZMQ
          * @param addr the endpoint to bind to.
          * @return true if the socket was bound, otherwise false.
          */
+        @Impure
         public boolean bind(String addr)
         {
             boolean rc = base.bind(addr);
@@ -3213,6 +3448,7 @@ public class ZMQ
          *
          * @param addr the endpoint to bind to.
          */
+        @Impure
         public int bindToRandomPort(String addr)
         {
             return bindToRandomPort(addr, DYNFROM, DYNTO);
@@ -3226,6 +3462,7 @@ public class ZMQ
          * @param min  The minimum port in the range of ports to try.
          * @param max  The maximum port in the range of ports to try.
          */
+        @Impure
         public int bindToRandomPort(String addr, int min, int max)
         {
             int port;
@@ -3280,6 +3517,7 @@ public class ZMQ
          * @param addr the endpoint to connect to.
          * @return true if the socket was connected, otherwise false.
          */
+        @Impure
         public boolean connect(String addr)
         {
             boolean rc = base.connect(addr);
@@ -3293,6 +3531,7 @@ public class ZMQ
          * @param addr the endpoint to disconnect from.
          * @return true if successful.
          */
+        @Impure
         public boolean disconnect(String addr)
         {
             return base.termEndpoint(addr);
@@ -3304,6 +3543,7 @@ public class ZMQ
          * @param addr the endpoint to unbind from.
          * @return true if successful.
          */
+        @Impure
         public boolean unbind(String addr)
         {
             return base.termEndpoint(addr);
@@ -3316,6 +3556,7 @@ public class ZMQ
          * @param addr the endpoint of the remote socket.
          * @return the endpoint routing ID.
          */
+        @Impure
         public int connectPeer(String addr)
         {
             return base.connectPeer(addr);
@@ -3329,6 +3570,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean sendMsg(Msg msg)
         {
             return sendMsg(msg, 0);
@@ -3341,6 +3583,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean sendMsgMore(Msg msg)
         {
             return sendMsg(msg, zmq.ZMQ.ZMQ_SNDMORE);
@@ -3366,6 +3609,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          *              This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean sendMsg(Msg msg, int flags)
         {
             if (base.send(msg, flags)) {
@@ -3384,6 +3628,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(String data)
         {
             return send(data.getBytes(CHARSET), 0);
@@ -3396,6 +3641,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean sendMore(String data)
         {
             return send(data.getBytes(CHARSET), zmq.ZMQ.ZMQ_SNDMORE);
@@ -3420,6 +3666,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(String data, int flags)
         {
             return send(data.getBytes(CHARSET), flags);
@@ -3433,6 +3680,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(byte[] data)
         {
             return send(data, 0);
@@ -3445,6 +3693,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean sendMore(byte[] data)
         {
             return send(data, zmq.ZMQ.ZMQ_SNDMORE);
@@ -3469,6 +3718,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(byte[] data, int flags)
         {
             zmq.Msg msg = new zmq.Msg(data);
@@ -3499,6 +3749,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(byte[] data, int flags, CancellationToken cancellationToken)
         {
             zmq.Msg msg = new zmq.Msg(data);
@@ -3531,6 +3782,7 @@ public class ZMQ
          * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
          * This does not indicate that the message has been transmitted to the network.
          */
+        @Impure
         public boolean send(byte[] data, int off, int length, int flags)
         {
             byte[] copy = new byte[length];
@@ -3562,6 +3814,7 @@ public class ZMQ
          *              </ul>
          * @return the number of bytes queued, -1 on error
          */
+        @Impure
         public int sendByteBuffer(ByteBuffer data, int flags)
         {
             zmq.Msg msg = new zmq.Msg(data);
@@ -3603,6 +3856,7 @@ public class ZMQ
          * @param args    Arguments according to the picture
          * @return true if successful, false if sending failed for any reason
          */
+        @Impure
         @Draft
         public boolean sendPicture(String picture, Object... args)
         {
@@ -3636,6 +3890,7 @@ public class ZMQ
          * This does not indicate that the message has been transmitted to the network.
          * @api.note Does not change or take ownership of any arguments.
          */
+        @Impure
         @Draft
         public boolean sendBinaryPicture(String picture, Object... args)
         {
@@ -3647,6 +3902,7 @@ public class ZMQ
          *
          * @return the message received; null on error.
          */
+        @Impure
         public Msg recvMsg()
         {
             return recvMsg(0);
@@ -3666,6 +3922,7 @@ public class ZMQ
          *              </ul>
          * @return the message received; null on error.
          */
+        @Impure
         public Msg recvMsg(int flags)
         {
             zmq.Msg msg = base.recv(flags);
@@ -3683,6 +3940,7 @@ public class ZMQ
          *
          * @return the message received, as an array of bytes; null on error.
          */
+        @Impure
         public byte[] recv()
         {
             return recv(0);
@@ -3705,6 +3963,7 @@ public class ZMQ
          *              </ul>
          * @return the message received, as an array of bytes; null on error.
          */
+        @Impure
         public byte[] recv(int flags)
         {
             zmq.Msg msg = base.recv(flags);
@@ -3737,6 +3996,7 @@ public class ZMQ
          *                          The token can be created by calling {@link #createCancellationToken() }.
          * @return the message received, as an array of bytes; null on error.
          */
+        @Impure
         public byte[] recv(int flags, CancellationToken cancellationToken)
         {
             zmq.Msg msg = base.recv(flags, cancellationToken.canceled);
@@ -3768,6 +4028,7 @@ public class ZMQ
          *               </ul>
          * @return the number of bytes read, -1 on error
          */
+        @Impure
         public int recv(byte[] buffer, int offset, int len, int flags)
         {
             zmq.Msg msg = base.recv(flags);
@@ -3794,6 +4055,7 @@ public class ZMQ
          *               </ul>
          * @return the number of bytes read, -1 on error
          */
+        @Impure
         public int recvByteBuffer(ByteBuffer buffer, int flags)
         {
             zmq.Msg msg = base.recv(flags);
@@ -3810,6 +4072,7 @@ public class ZMQ
         /**
          * @return the message received, as a String object; null on no message.
          */
+        @Impure
         public String recvStr()
         {
             return recvStr(0);
@@ -3829,6 +4092,7 @@ public class ZMQ
          *              </ul>
          * @return the message received, as a String object; null on no message.
          */
+        @Impure
         public String recvStr(int flags)
         {
             byte[] msg = recv(flags);
@@ -3869,6 +4133,7 @@ public class ZMQ
          *
          * @return the picture elements as object array
          */
+        @Impure
         @Draft
         public Object[] recvPicture(String picture)
         {
@@ -3886,6 +4151,7 @@ public class ZMQ
          *                for the supported argument types.
          * @return the picture elements as object array
          **/
+        @Impure
         @Draft
         public Object[] recvBinaryPicture(final String picture)
         {
@@ -3906,6 +4172,7 @@ public class ZMQ
          * @return true if monitor socket setup is successful
          * @throws ZMQException
          */
+        @Impure
         public boolean monitor(String addr, int events)
         {
             return base.monitor(addr, events);
@@ -3919,11 +4186,13 @@ public class ZMQ
          * @return true if consumer setup is successful
          * @throws ZMQException
          */
+        @Impure
         public boolean setEventHook(ZEvent.ZEventConsummer consumer, int events)
         {
             return base.setEventHook(consumer, events);
         }
 
+        @Impure
         protected void mayRaise()
         {
             int errno = base.errno();
@@ -3932,11 +4201,13 @@ public class ZMQ
             }
         }
 
+        @Impure
         public int errno()
         {
             return base.errno();
         }
 
+        @SideEffectFree
         @Override
         public String toString()
         {
@@ -3952,11 +4223,13 @@ public class ZMQ
 
             private final Mechanisms mech;
 
+            @Impure
             Mechanism(Mechanisms zmq)
             {
                 this.mech = zmq;
             }
 
+            @Impure
             private static Mechanism find(Mechanisms mech)
             {
                 for (Mechanism candidate : values()) {
@@ -3972,6 +4245,7 @@ public class ZMQ
          * Create a {@link CancellationToken} to cancel send/receive operations for this socket.
          * @return a new cancellation token associated with this socket.
          */
+        @Impure
         public CancellationToken createCancellationToken()
         {
             return new CancellationToken(base);
@@ -3981,6 +4255,7 @@ public class ZMQ
     /**
      * Provides a mechanism for applications to multiplex input/output events in a level-triggered fashion over a set of sockets
      */
+    @InheritableMustCall("close")
     public static class Poller implements Closeable
     {
         /**
@@ -4009,6 +4284,7 @@ public class ZMQ
         private static final int SIZE_INCREMENT = 16;
 
         private final Selector selector;
+        @Owning
         private final Context  context;
 
         private final List<PollItem> items;
@@ -4021,6 +4297,7 @@ public class ZMQ
          * @param context a 0MQ context previously created.
          * @param size    the number of Sockets this poller will contain.
          */
+        @Impure
         protected Poller(Context context, int size)
         {
             assert (context != null);
@@ -4038,11 +4315,14 @@ public class ZMQ
          *
          * @param context a 0MQ context previously created.
          */
+        @Impure
         protected Poller(Context context)
         {
             this(context, SIZE_DEFAULT);
         }
 
+        @EnsuresCalledMethods(value="this.context", methods="close")
+        @Impure
         @Override
         public void close()
         {
@@ -4055,6 +4335,7 @@ public class ZMQ
          * @param socket the Socket we are registering.
          * @return the index identifying this Socket in the poll set.
          */
+        @Impure
         public int register(Socket socket)
         {
             return register(socket, POLLIN | POLLOUT | POLLERR);
@@ -4066,6 +4347,7 @@ public class ZMQ
          * @param channel the Channel we are registering.
          * @return the index identifying this Channel in the poll set.
          */
+        @Impure
         public int register(SelectableChannel channel)
         {
             return register(channel, POLLIN | POLLOUT | POLLERR);
@@ -4080,6 +4362,7 @@ public class ZMQ
          * @param events a mask composed by XORing POLLIN, POLLOUT and POLLERR.
          * @return the index identifying this Socket in the poll set.
          */
+        @Impure
         public int register(Socket socket, int events)
         {
             return registerInternal(new PollItem(socket, events));
@@ -4094,6 +4377,7 @@ public class ZMQ
          * @param events  a mask composed by XORing POLLIN, POLLOUT and POLLERR.
          * @return the index identifying this Channel in the poll set.
          */
+        @Impure
         public int register(SelectableChannel channel, int events)
         {
             return registerInternal(new PollItem(channel, events));
@@ -4107,6 +4391,7 @@ public class ZMQ
          * @param item the PollItem we are registering.
          * @return the index identifying this Channel in the poll set.
          */
+        @Impure
         public int register(PollItem item)
         {
             return registerInternal(item);
@@ -4120,6 +4405,7 @@ public class ZMQ
          * @param item the PollItem we are registering.
          * @return the index identifying this Socket in the poll set.
          */
+        @Impure
         private int registerInternal(PollItem item)
         {
           items.add(item);
@@ -4131,6 +4417,7 @@ public class ZMQ
          *
          * @param socket the Socket to be unregistered
          */
+        @Impure
         public void unregister(Socket socket)
         {
             unregisterInternal(socket);
@@ -4141,6 +4428,7 @@ public class ZMQ
          *
          * @param channel the Socket to be unregistered
          */
+        @Impure
         public void unregister(SelectableChannel channel)
         {
             unregisterInternal(channel);
@@ -4151,6 +4439,7 @@ public class ZMQ
          *
          * @param socket the Socket to be unregistered
          */
+        @Impure
         private void unregisterInternal(Object socket)
         {
             items.removeIf(item -> item.socket == socket || item.getRawSocket() == socket);
@@ -4162,6 +4451,7 @@ public class ZMQ
          * @param index the desired index.
          * @return the PollItem associated with that index (or null).
          */
+        @Pure
         public PollItem getItem(int index)
         {
             if (index < 0 || index >= items.size()) {
@@ -4176,6 +4466,8 @@ public class ZMQ
          * @param index the desired index.
          * @return the Socket associated with that index (or null).
          */
+        @NotOwning
+        @Pure
         public Socket getSocket(int index)
         {
             if (index < 0 || index >= items.size()) {
@@ -4190,6 +4482,7 @@ public class ZMQ
          * @return the current poll timeout in milliseconds.
          * @deprecated Timeout handling has been moved to the poll() methods.
          */
+        @Pure
         @Deprecated
         public long getTimeout()
         {
@@ -4202,6 +4495,7 @@ public class ZMQ
          * @param timeout the desired poll timeout in milliseconds.
          * @deprecated Timeout handling has been moved to the poll() methods.
          */
+        @Impure
         @Deprecated
         public void setTimeout(long timeout)
         {
@@ -4215,6 +4509,7 @@ public class ZMQ
          *
          * @return the current poll set size.
          */
+        @Pure
         public int getSize()
         {
             return items.size();
@@ -4226,6 +4521,7 @@ public class ZMQ
          * @deprecated use getSize instead
          * @return the index for the next position in the poll set size.
          */
+        @Pure
         @Deprecated
         public int getNext()
         {
@@ -4239,6 +4535,7 @@ public class ZMQ
          *
          * @return how many objects where signaled by poll ().
          */
+        @Impure
         public int poll()
         {
             long tout = -1L;
@@ -4262,6 +4559,7 @@ public class ZMQ
          * @return how many objects where signaled by poll ()
          * @see "http://api.zeromq.org/3-0:zmq-poll"
          */
+        @Impure
         public int poll(long tout)
         {
             if (tout < -1) {
@@ -4296,6 +4594,8 @@ public class ZMQ
          * @param index of element
          * @return true if the element was signaled.
          */
+        @Pure
+        @Impure
         public boolean pollin(int index)
         {
             if (index < 0 || index >= items.size()) {
@@ -4311,6 +4611,8 @@ public class ZMQ
          * @param index of element
          * @return true if the element was signaled.
          */
+        @Pure
+        @Impure
         public boolean pollout(int index)
         {
             if (index < 0 || index >= items.size()) {
@@ -4326,6 +4628,8 @@ public class ZMQ
          * @param index of element
          * @return true if the element was signaled.
          */
+        @Pure
+        @Impure
         public boolean pollerr(int index)
         {
             if (index < 0 || index >= items.size()) {
@@ -4341,59 +4645,78 @@ public class ZMQ
         private final zmq.poll.PollItem base;
         private final Socket            socket;
 
+        @Impure
         public PollItem(Socket socket, int ops)
         {
             this.socket = socket;
             base = new zmq.poll.PollItem(socket.base, ops);
         }
 
+        @Impure
         public PollItem(SelectableChannel channel, int ops)
         {
             base = new zmq.poll.PollItem(channel, ops);
             socket = null;
         }
 
+        @Pure
         final zmq.poll.PollItem base()
         {
             return base;
         }
 
+        @Pure
+        @Impure
+        @NotOwning
         public final SelectableChannel getRawSocket()
         {
             return base.getRawSocket();
         }
 
+        @NotOwning
+        @Pure
         public final Socket getSocket()
         {
             return socket;
         }
 
+        @Pure
+        @Impure
         public final boolean isReadable()
         {
             return base.isReadable();
         }
 
+        @Pure
+        @Impure
         public final boolean isWritable()
         {
             return base.isWritable();
         }
 
+        @Pure
+        @Impure
         public final boolean isError()
         {
             return base.isError();
         }
 
+        @Pure
+        @Impure
         public final int readyOps()
         {
             return base.readyOps();
         }
 
+        @Pure
+        @Impure
         @Override
         public int hashCode()
         {
             return base.hashCode();
         }
 
+        @Impure
         @Override
         public boolean equals(Object obj)
         {
@@ -4425,6 +4748,7 @@ public class ZMQ
         private final Object resolvedValue;
         private final String address;
 
+        @SideEffectFree
         public Event(int event, Object value, String address)
         {
             this.event = event;
@@ -4433,6 +4757,7 @@ public class ZMQ
             this.resolvedValue = value;
         }
 
+        @SideEffectFree
         private Event(int event, Object value, Object resolvedValue, String address)
         {
             this.event = event;
@@ -4449,6 +4774,7 @@ public class ZMQ
          * @return the received event or null if no message was received.
          * @throws ZMQException
          */
+        @Impure
         public static Event recv(Socket socket, int flags)
         {
             zmq.ZMQ.Event e = zmq.ZMQ.Event.read(socket.base, flags);
@@ -4492,21 +4818,25 @@ public class ZMQ
          * @return the received event.
          * @throws ZMQException
          */
+        @Impure
         public static Event recv(Socket socket)
         {
             return Event.recv(socket, 0);
         }
 
+        @Pure
         public int getEvent()
         {
             return event;
         }
 
+        @Pure
         public Object getValue()
         {
             return value;
         }
 
+        @Pure
         public String getAddress()
         {
             return address;
@@ -4519,6 +4849,7 @@ public class ZMQ
          * considered as an error.
          * @return true if the evant was an error
          */
+        @Pure
         public boolean isError()
         {
             switch (event) {
@@ -4540,6 +4871,7 @@ public class ZMQ
          * considered as a warning.
          * @return
          */
+        @Pure
         public boolean isWarn()
         {
             switch (event) {
@@ -4563,6 +4895,7 @@ public class ZMQ
          * @param <M> The expected type of the returned object
          * @return The resolved value.
          */
+        @Pure
         @SuppressWarnings("unchecked")
         public <M> M resolveValue()
         {
@@ -4637,6 +4970,7 @@ public class ZMQ
          *
          * @return Randomly generated {@link KeyPair}
          */
+        @Impure
         public static KeyPair generateKeyPair()
         {
             String[] keys = new zmq.io.mechanism.curve.Curve().keypairZ85();
@@ -4651,6 +4985,7 @@ public class ZMQ
          * @param key Key to be decoded
          * @return The resulting key as byte array
          */
+        @Impure
         public static byte[] z85Decode(String key)
         {
             return Z85.decode(key);
@@ -4666,6 +5001,7 @@ public class ZMQ
          * @param key Key to be encoded
          * @return The resulting key as String in Z85
          */
+        @Impure
         public static String z85Encode(byte[] key)
         {
             return zmq.io.mechanism.curve.Curve.z85EncodePublic(key);
@@ -4687,6 +5023,7 @@ public class ZMQ
              */
             public final String secretKey;
 
+            @Impure
             public KeyPair(final String publicKey, final String secretKey)
             {
                 Utils.checkArgument(publicKey != null, "Public key cannot be null");
@@ -4709,12 +5046,14 @@ public class ZMQ
         protected final AtomicBoolean canceled;
         final SocketBase socket;
 
+        @Impure
         protected CancellationToken(SocketBase socket)
         {
             this.socket = socket;
             canceled = new AtomicBoolean(false);
         }
 
+        @Impure
         public boolean isCancellationRequested()
         {
             return canceled.get();
@@ -4723,6 +5062,7 @@ public class ZMQ
         /**
          * Reset the cancellation token in order to reuse the token with another send/receive call.
          */
+        @Impure
         public void reset()
         {
             canceled.set(false);
@@ -4731,6 +5071,7 @@ public class ZMQ
         /**
          * Cancel a pending the send/receive operation.
          */
+        @Impure
         public void cancel()
         {
             socket.cancel(canceled);

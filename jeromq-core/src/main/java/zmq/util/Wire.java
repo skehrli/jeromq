@@ -1,5 +1,8 @@
 package zmq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
@@ -11,15 +14,18 @@ import zmq.Msg;
 // types to/from network byte order.
 public class Wire
 {
+    @SideEffectFree
     private Wire()
     {
     }
 
+    @Impure
     private static int getUInt8(ByteBuffer buf, int offset)
     {
         return buf.get(offset) & 0xff;
     }
 
+    @Impure
     private static ByteBuffer putUInt8(ByteBuffer buf, int value)
     {
         buf.put((byte) (value & 0xff));
@@ -27,16 +33,19 @@ public class Wire
     }
 
     // 2 bytes value
+    @Pure
     public static int getUInt16(byte[] bytes)
     {
         return (bytes[0] & 0xff) << 8 | bytes[1] & 0xff;
     }
 
+    @Impure
     public static int getUInt16(ByteBuffer buf, int offset)
     {
         return (buf.get(offset) & 0xff) << 8 | (buf.get(offset + 1) & 0xff);
     }
 
+    @Impure
     public static byte[] putUInt16(int value)
     {
         assert (value >= 0); // it has to be an *unsigned* int
@@ -48,6 +57,7 @@ public class Wire
         return bytes;
     }
 
+    @Impure
     public static Msg putUInt16(Msg msg, int value)
     {
         msg.put((byte) ((value >>> 8) & 0xff));
@@ -56,6 +66,7 @@ public class Wire
         return msg;
     }
 
+    @Impure
     public static ByteBuffer putUInt16(ByteBuffer buf, int value)
     {
         buf.put((byte) ((value >>> 8) & 0xff));
@@ -65,28 +76,33 @@ public class Wire
     }
 
     // 4 bytes value
+    @Impure
     public static int getUInt32(ByteBuffer buf)
     {
         return getUInt32(buf, 0);
     }
 
+    @Impure
     public static int getUInt32(ByteBuffer buf, int offset)
     {
         return (buf.get(offset) & 0xff) << 24 | (buf.get(offset + 1) & 0xff) << 16 | (buf.get(offset + 2) & 0xff) << 8
                 | (buf.get(offset + 3) & 0xff);
     }
 
+    @Impure
     public static int getUInt32(Msg msg, int offset)
     {
         return msg.getInt(offset);
     }
 
+    @Pure
     public static int getUInt32(byte[] bytes, int offset)
     {
         return (bytes[offset] & 0xff) << 24 | (bytes[offset + 1] & 0xff) << 16 | (bytes[offset + 2] & 0xff) << 8
                 | (bytes[offset + 3] & 0xff);
     }
 
+    @Impure
     public static ByteBuffer putUInt32(ByteBuffer buf, int value)
     {
         buf.put((byte) ((value >>> 24) & 0xff));
@@ -97,6 +113,7 @@ public class Wire
         return buf;
     }
 
+    @Impure
     public static byte[] putUInt32(int value)
     {
         assert (value >= 0); // it has to be an *unsigned* int
@@ -110,6 +127,7 @@ public class Wire
         return bytes;
     }
 
+    @Impure
     public static Msg putUInt32(Msg msg, int value)
     {
         msg.put((byte) ((value >>> 24) & 0xff));
@@ -121,6 +139,7 @@ public class Wire
     }
 
     // 8 bytes value
+    @Impure
     public static ByteBuffer putUInt64(ByteBuffer buf, long value)
     {
         buf.put((byte) ((value >>> 56) & 0xff));
@@ -135,6 +154,7 @@ public class Wire
         return buf;
     }
 
+    @Impure
     public static long getUInt64(ByteBuffer buf, int offset)
     {
         return (long) (buf.get(offset) & 0xff) << 56 | (long) (buf.get(offset + 1) & 0xff) << 48
@@ -143,22 +163,26 @@ public class Wire
                 | (long) (buf.get(offset + 6) & 0xff) << 8 | (long) buf.get(offset + 7) & 0xff;
     }
 
+    @Impure
     public static long getUInt64(Msg msg, int offset)
     {
         return msg.getLong(offset);
     }
 
     // strings
+    @Impure
     public static int putShortString(ByteBuffer buf, String value)
     {
         return putShortString(ZMQ.CHARSET, buf, value);
     }
 
+    @Impure
     public static String getShortString(ByteBuffer buf, int offset)
     {
         return getShortString(ZMQ.CHARSET, buf, offset);
     }
 
+    @Impure
     public static int putShortString(Charset charset, ByteBuffer buf, String value)
     {
         int length = value.length();
@@ -168,22 +192,26 @@ public class Wire
         return length + 1;
     }
 
+    @Impure
     public static String getShortString(Charset charset, ByteBuffer buf, int offset)
     {
         int length = getUInt8(buf, offset);
         return extractString(charset, buf, offset, length, 1);
     }
 
+    @Impure
     public static int putLongString(ByteBuffer buf, String value)
     {
         return putLongString(ZMQ.CHARSET, buf, value);
     }
 
+    @Impure
     public static String getLongString(ByteBuffer buf, int offset)
     {
         return getLongString(ZMQ.CHARSET, buf, offset);
     }
 
+    @Impure
     public static int putLongString(Charset charset, ByteBuffer buf, String value)
     {
         int length = value.length();
@@ -193,12 +221,14 @@ public class Wire
         return length + 4;
     }
 
+    @Impure
     public static String getLongString(Charset charset, ByteBuffer buf, int offset)
     {
         int length = Wire.getUInt32(buf, offset);
         return extractString(charset, buf, offset, length, 4);
     }
 
+    @Impure
     private static String extractString(Charset charset, ByteBuffer buf, int offset, int length, int sizeOfSize)
     {
         byte[] text = new byte[length];

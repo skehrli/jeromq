@@ -1,5 +1,7 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,6 +44,7 @@ public abstract class Own extends ZObject
 
     //  The object is not living within an I/O thread. It has it's own
     //  thread outside of 0MQ infrastructure.
+    @Impure
     protected Own(Ctx parent, int tid)
     {
         super(parent, tid);
@@ -57,6 +60,7 @@ public abstract class Own extends ZObject
     }
 
     //  The object is living within I/O thread.
+    @Impure
     protected Own(IOThread ioThread, Options options)
     {
         super(ioThread);
@@ -71,15 +75,18 @@ public abstract class Own extends ZObject
         owned = new HashSet<>();
     }
 
+    @Impure
     protected abstract void destroy();
 
     //  A place to hook in when physical destruction of the object
     //  is to be delayed.
+    @Impure
     protected void processDestroy()
     {
         destroy();
     }
 
+    @Impure
     private void setOwner(Own owner)
     {
         assert (this.owner == null) : this.owner;
@@ -89,12 +96,14 @@ public abstract class Own extends ZObject
     //  When another owned object wants to send command to this object
     //  it calls this function to let it know it should not shut down
     //  before the command is delivered.
+    @Impure
     protected void incSeqnum()
     {
         //  This function may be called from a different thread!
         sendSeqnum.incrementAndGet();
     }
 
+    @Impure
     @Override
     protected final void processSeqnum()
     {
@@ -106,6 +115,7 @@ public abstract class Own extends ZObject
     }
 
     //  Launch the supplied object and become its owner.
+    @Impure
     protected final void launchChild(Own object)
     {
         //  Specify the owner of the object.
@@ -119,11 +129,13 @@ public abstract class Own extends ZObject
     }
 
     //  Terminate owned object
+    @Impure
     protected final void termChild(Own object)
     {
         processTermReq(object);
     }
 
+    @Impure
     @Override
     protected final void processTermReq(Own object)
     {
@@ -148,6 +160,7 @@ public abstract class Own extends ZObject
         sendTerm(object, options.linger);
     }
 
+    @Impure
     @Override
     protected final void processOwn(Own object)
     {
@@ -166,6 +179,7 @@ public abstract class Own extends ZObject
     //  Ask owner object to terminate this object. It may take a while
     //  while actual termination is started. This function should not be
     //  called more than once.
+    @Impure
     protected final void terminate()
     {
         //  If termination is already underway, there's no point
@@ -186,6 +200,7 @@ public abstract class Own extends ZObject
     }
 
     //  Returns true if the object is in process of termination.
+    @Pure
     protected final boolean isTerminating()
     {
         return terminating;
@@ -194,6 +209,7 @@ public abstract class Own extends ZObject
     //  Term handler is protected rather than private so that it can
     //  be intercepted by the derived class. This is useful to add custom
     //  steps to the beginning of the termination process.
+    @Impure
     @Override
     protected void processTerm(int linger)
     {
@@ -218,11 +234,13 @@ public abstract class Own extends ZObject
     //  register_tem_acks functions. When event occurs, call
     //  remove_term_ack. When number of pending acks reaches zero
     //  object will be deallocated.
+    @Impure
     final void registerTermAcks(int count)
     {
         termAcks += count;
     }
 
+    @Impure
     final void unregisterTermAck()
     {
         assert (termAcks > 0);
@@ -232,12 +250,14 @@ public abstract class Own extends ZObject
         checkTermAcks();
     }
 
+    @Impure
     @Override
     protected final void processTermAck()
     {
         unregisterTermAck();
     }
 
+    @Impure
     private void checkTermAcks()
     {
         if (terminating && processedSeqnum == sendSeqnum.get() && termAcks == 0) {

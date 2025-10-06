@@ -1,5 +1,7 @@
 package zmq.io.mechanism.curve;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -52,6 +54,7 @@ public class CurveServerMechanism extends Mechanism
 
     private final Errno errno;
 
+    @Impure
     public CurveServerMechanism(SessionBase session, Address peerAddress, Options options)
     {
         super(session, peerAddress, options);
@@ -73,6 +76,7 @@ public class CurveServerMechanism extends Mechanism
         errno = options.errno;
     }
 
+    @Impure
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
@@ -104,6 +108,7 @@ public class CurveServerMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public int processHandshakeCommand(Msg msg)
     {
@@ -124,6 +129,7 @@ public class CurveServerMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public Msg encode(Msg msg)
     {
@@ -162,6 +168,7 @@ public class CurveServerMechanism extends Mechanism
         return encoded;
     }
 
+    @Impure
     @Override
     public Msg decode(Msg msg)
     {
@@ -223,6 +230,7 @@ public class CurveServerMechanism extends Mechanism
         }
     }
 
+    @Impure
     @Override
     public int zapMsgAvailable()
     {
@@ -237,6 +245,7 @@ public class CurveServerMechanism extends Mechanism
         return rc;
     }
 
+    @Pure
     @Override
     public Status status()
     {
@@ -251,6 +260,7 @@ public class CurveServerMechanism extends Mechanism
         }
     }
 
+    @Impure
     private int processHello(Msg msg)
     {
         if (!compare(msg, "HELLO", true)) {
@@ -298,6 +308,7 @@ public class CurveServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceWelcome(Msg msg)
     {
         ByteBuffer cookieNonce = ByteBuffer.allocate(Curve.Size.NONCE.bytes());
@@ -357,6 +368,7 @@ public class CurveServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int processInitiate(Msg msg)
     {
         if (!compare(msg, "INITIATE", true)) {
@@ -470,6 +482,7 @@ public class CurveServerMechanism extends Mechanism
         return parseMetadata(initiatePlaintext, Curve.Size.ZERO.bytes() + 128, false);
     }
 
+    @Impure
     private int produceReady(Msg msg)
     {
         ByteBuffer readyNonce = ByteBuffer.allocate(Curve.Size.NONCE.bytes());
@@ -506,6 +519,7 @@ public class CurveServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceError(Msg msg)
     {
         assert (statusCode == null || statusCode.length() == 3);
@@ -516,6 +530,7 @@ public class CurveServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private void sendZapRequest(byte[] key)
     {
         sendZapRequest(Mechanisms.CURVE, true);

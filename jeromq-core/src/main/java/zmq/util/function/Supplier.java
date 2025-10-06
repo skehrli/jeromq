@@ -1,4 +1,5 @@
 package zmq.util.function;
+import org.checkerframework.dataflow.qual.Impure;
 
 /**
  * Represents a supplier of results.
@@ -19,5 +20,6 @@ public interface Supplier<T>
      *
      * @return a result
      */
+    @Impure
     T get();
 }

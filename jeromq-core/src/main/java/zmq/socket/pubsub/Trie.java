@@ -1,5 +1,8 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -10,6 +13,7 @@ class Trie
 {
     public interface ITrieHandler
     {
+        @Impure
         void added(byte[] data, int size, Pipe arg);
     }
 
@@ -21,6 +25,7 @@ class Trie
 
     Trie[] next;
 
+    @SideEffectFree
     public Trie()
     {
         min = 0;
@@ -33,6 +38,7 @@ class Trie
 
     //  Add key to the trie. Returns true if this is a new item in the trie
     //  rather than a duplicate.
+    @Impure
     public boolean add(Msg msg, int start, int size)
     {
         //  We are at the node corresponding to the prefix. We are done.
@@ -94,6 +100,8 @@ class Trie
         }
     }
 
+    @SideEffectFree
+    @Impure
     private Trie[] realloc(Trie[] table, int size, boolean ended)
     {
         return Utils.realloc(Trie.class, table, size, ended);
@@ -101,6 +109,7 @@ class Trie
 
     //  Remove key from the trie. Returns true if the item is actually
     //  removed from the trie.
+    @Impure
     public boolean rm(Msg msg, int start, int size)
     {
         //  TODO: Shouldn't an error be reported if the key does not exist?
@@ -214,6 +223,7 @@ class Trie
     }
 
     //  Check whether particular key is in the trie.
+    @Impure
     public boolean check(ByteBuffer data)
     {
         assert (data != null);
@@ -256,11 +266,13 @@ class Trie
     }
 
     //  Apply the function supplied to each subscription in the trie.
+    @Impure
     public void apply(ITrieHandler func, Pipe arg)
     {
         applyHelper(null, 0, 0, func, arg);
     }
 
+    @Impure
     private void applyHelper(byte[] buff, int buffsize, int maxBuffsize, ITrieHandler func, Pipe pipe)
     {
         assert (func != null);
@@ -300,6 +312,7 @@ class Trie
         }
     }
 
+    @Pure
     private boolean isRedundant()
     {
         return refcnt == 0 && liveNodes == 0;

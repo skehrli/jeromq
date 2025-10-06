@@ -1,5 +1,7 @@
 package zmq.socket.radiodish;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +35,7 @@ public class Dish extends SocketBase
     private Msg pendingMsg;
 
     //  Holds the prefetched message.
+    @Impure
     public Dish(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -48,6 +51,7 @@ public class Dish extends SocketBase
         subscriptions = new HashSet<>();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -60,18 +64,21 @@ public class Dish extends SocketBase
         sendSubscriptions(pipe);
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         dist.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -79,6 +86,7 @@ public class Dish extends SocketBase
         dist.terminated(pipe);
     }
 
+    @Impure
     @Override
     protected void xhiccuped(Pipe pipe)
     {
@@ -86,6 +94,7 @@ public class Dish extends SocketBase
         sendSubscriptions(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xjoin(String group)
     {
@@ -109,6 +118,7 @@ public class Dish extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xleave(String group)
     {
@@ -131,6 +141,7 @@ public class Dish extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -139,6 +150,7 @@ public class Dish extends SocketBase
         throw new UnsupportedOperationException();
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -153,6 +165,7 @@ public class Dish extends SocketBase
         return xxrecv();
     }
 
+    @Impure
     private Msg xxrecv()
     {
         // Get a message using fair queueing algorithm.
@@ -176,6 +189,7 @@ public class Dish extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
@@ -195,6 +209,7 @@ public class Dish extends SocketBase
         return true;
     }
 
+    @Pure
     @Override
     protected boolean xhasOut()
     {
@@ -202,6 +217,7 @@ public class Dish extends SocketBase
         return true;
     }
 
+    @Impure
     private void sendSubscriptions(Pipe pipe)
     {
         for (String s : subscriptions) {
@@ -228,6 +244,7 @@ public class Dish extends SocketBase
         private State state;
         private String group;
 
+        @Impure
         public DishSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
                            final Address addr)
         {
@@ -237,6 +254,7 @@ public class Dish extends SocketBase
             group = "";
         }
 
+        @Impure
         @Override
         public boolean pushMsg(Msg msg)
         {
@@ -278,6 +296,7 @@ public class Dish extends SocketBase
             }
         }
 
+        @Impure
         @Override
         protected Msg pullMsg()
         {
@@ -311,6 +330,7 @@ public class Dish extends SocketBase
             return command;
         }
 
+        @Impure
         @Override
         protected void reset()
         {

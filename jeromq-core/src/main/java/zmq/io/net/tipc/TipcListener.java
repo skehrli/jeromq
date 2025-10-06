@@ -1,5 +1,6 @@
 package zmq.io.net.tipc;
 
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Options;
 import zmq.SocketBase;
 import zmq.io.IOThread;
@@ -7,6 +8,7 @@ import zmq.io.net.tcp.TcpListener;
 
 public class TipcListener extends TcpListener
 {
+    @Impure
     public TipcListener(IOThread ioThread, SocketBase socket, final Options options)
     {
         super(ioThread, socket, options);

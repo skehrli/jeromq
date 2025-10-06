@@ -1,5 +1,7 @@
 package zmq.io.net.ipc;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -20,11 +22,14 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
 {
     public static class IpcAddressMask extends TcpAddress
     {
+        @Impure
         public IpcAddressMask(String addr, boolean ipv6)
         {
             super(addr, ipv6);
         }
 
+        @Pure
+        @Impure
         public boolean matchAddress(SocketAddress addr)
         {
             return address().equals(addr);
@@ -35,6 +40,7 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
     private final InetSocketAddress address;
     private final InetSocketAddress sourceAddress;
 
+    @Impure
     public IpcAddress(String addr)
     {
         String[] strings = addr.split(";");
@@ -48,6 +54,7 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
         }
     }
 
+    @Pure
     @Override
     public String toString()
     {
@@ -58,6 +65,7 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
         return "ipc://" + name;
     }
 
+    @Impure
     @Override
     public String toString(int port)
     {
@@ -68,6 +76,7 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
         return toString();
     }
 
+    @Impure
     @Override
     public InetSocketAddress resolve(String name, boolean ipv6, boolean loopback)
     {
@@ -88,24 +97,28 @@ public class IpcAddress implements Address.IZAddress<InetSocketAddress>
         return new InetSocketAddress(findAddress(ipv6, loopback), hash);
     }
 
+    @Pure
     @Override
     public InetSocketAddress address()
     {
         return address;
     }
 
+    @Pure
     @Override
     public ProtocolFamily family()
     {
         return StandardProtocolFamily.INET;
     }
 
+    @Pure
     @Override
     public InetSocketAddress sourceAddress()
     {
         return sourceAddress;
     }
 
+    @Impure
     private InetAddress findAddress(boolean ipv6, boolean loopback)
     {
         Class<? extends InetAddress> addressClass = ipv6 ? Inet6Address.class : Inet4Address.class;

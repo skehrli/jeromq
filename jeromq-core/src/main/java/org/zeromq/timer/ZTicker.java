@@ -1,5 +1,7 @@
 package org.zeromq.timer;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
 import org.zeromq.timer.ZTicket.Ticket;
 import org.zeromq.timer.ZTimer.Timer;
 
@@ -29,28 +31,34 @@ public final class ZTicker
     private final ZTimer  timer;
     private final ZTicket ticket;
 
+    @Impure
     public ZTicker()
     {
         timer = new ZTimer();
         ticket = new ZTicket();
     }
 
+    @SideEffectFree
+    @Impure
     ZTicker(Supplier<Long> clock)
     {
         timer = new ZTimer(clock);
         ticket = new ZTicket(clock);
     }
 
+    @Impure
     public Ticket addTicket(long interval, TimerHandler handler, Object... args)
     {
         return ticket.add(interval, handler, args);
     }
 
+    @Impure
     public Timer addTimer(long interval, TimerHandler handler, Object... args)
     {
         return timer.add(interval, handler, args);
     }
 
+    @Impure
     public long timeout()
     {
         long timer = this.timer.timeout();
@@ -63,6 +71,7 @@ public final class ZTicker
         }
     }
 
+    @Impure
     public int execute()
     {
         return timer.execute() + ticket.execute();

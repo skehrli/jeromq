@@ -1,5 +1,8 @@
 package zmq.pipe;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import zmq.Config;
 import zmq.Msg;
 import zmq.ZObject;
@@ -12,12 +15,16 @@ public class Pipe extends ZObject
 {
     public interface IPipeEvents
     {
+        @Impure
         void readActivated(Pipe pipe);
 
+        @Impure
         void writeActivated(Pipe pipe);
 
+        @Impure
         void hiccuped(Pipe pipe);
 
+        @Impure
         void pipeTerminated(Pipe pipe);
     }
 
@@ -95,6 +102,8 @@ public class Pipe extends ZObject
 
     //  Constructor is private. Pipe can only be created using
     //  pipepair function.
+    @SideEffectFree
+    @Impure
     private Pipe(ZObject parent, YPipeBase<Msg> inpipe, YPipeBase<Msg> outpipe, int inhwm, int outhwm, boolean conflate)
     {
         super(parent);
@@ -124,6 +133,7 @@ public class Pipe extends ZObject
     //  Conflate specifies how the pipe behaves when the peer terminates. If true
     //  pipe receives all the pending messages before terminating, otherwise it
     //  terminates straight away.
+    @Impure
     public static Pipe[] pair(ZObject[] parents, int[] hwms, boolean[] conflates)
     {
         Pipe[] pipes = new Pipe[2];
@@ -146,6 +156,7 @@ public class Pipe extends ZObject
 
     //  Pipepair uses this function to let us know about
     //  the peer pipe object.
+    @Impure
     private void setPeer(Pipe peer)
     {
         //  Peer can be set once only.
@@ -155,6 +166,7 @@ public class Pipe extends ZObject
     }
 
     //  Specifies the object to send events to.
+    @Impure
     public void setEventSink(IPipeEvents sink)
     {
         assert (this.sink == null);
@@ -162,32 +174,38 @@ public class Pipe extends ZObject
     }
 
     //  Pipe endpoint can store an opaque ID to be used by its clients.
+    @Impure
     public void setIdentity(Blob identity)
     {
         this.identity = identity;
     }
 
+    @Pure
     public Blob getIdentity()
     {
         return identity;
     }
 
+    @Impure
     public void setRoutingId(int routingId)
     {
         this.routingId = routingId;
     }
 
+    @Pure
     public int getRoutingId()
     {
         return routingId;
     }
 
+    @Pure
     public Blob getCredential()
     {
         return credential;
     }
 
     //  Returns true if there is at least one message to read in the pipe.
+    @Impure
     public boolean checkRead()
     {
         if (!inActive) {
@@ -217,6 +235,7 @@ public class Pipe extends ZObject
     }
 
     //  Reads a message to the underlying pipe.
+    @Impure
     public Msg read()
     {
         if (!inActive) {
@@ -259,6 +278,7 @@ public class Pipe extends ZObject
 
     //  Checks whether messages can be written to the pipe. If writing
     //  the message would cause high watermark the function returns false.
+    @Impure
     public boolean checkWrite()
     {
         if (!outActive || state != State.ACTIVE) {
@@ -278,6 +298,7 @@ public class Pipe extends ZObject
 
     //  Writes a message to the underlying pipe. Returns false if the
     //  message cannot be written because high watermark was reached.
+    @Impure
     public boolean write(Msg msg)
     {
         if (!checkWrite()) {
@@ -296,6 +317,7 @@ public class Pipe extends ZObject
     }
 
     //  Remove unfinished parts of the outbound message from the pipe.
+    @Impure
     public void rollback()
     {
         //  Remove incomplete message from the outbound pipe.
@@ -308,6 +330,7 @@ public class Pipe extends ZObject
     }
 
     //  Flush the messages downstream.
+    @Impure
     public void flush()
     {
         //  The peer does not exist anymore at this point.
@@ -320,6 +343,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     protected void processActivateRead()
     {
@@ -329,6 +353,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     protected void processActivateWrite(long msgsRead)
     {
@@ -341,6 +366,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     protected void processHiccup(YPipeBase<Msg> pipe)
     {
@@ -366,6 +392,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     protected void processPipeTerm()
     {
@@ -405,6 +432,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     protected void processPipeTermAck()
     {
@@ -445,6 +473,7 @@ public class Pipe extends ZObject
         inpipe = null;
     }
 
+    @Impure
     public void setNoDelay()
     {
         this.delay = false;
@@ -454,6 +483,7 @@ public class Pipe extends ZObject
     //  and user will be notified about actual deallocation by 'terminated'
     //  event. If delay is true, the pending messages will be processed
     //  before actual shutdown.
+    @Impure
     public void terminate(boolean delay)
     {
         //  Overload the value specified at pipe creation.
@@ -515,12 +545,15 @@ public class Pipe extends ZObject
     }
 
     //  Returns true if the message is delimiter; false otherwise.
+    @Pure
+    @Impure
     private static boolean isDelimiter(Msg msg)
     {
         return msg.isDelimiter();
     }
 
     //  Computes appropriate low watermark from the given high watermark.
+    @Pure
     private static int computeLwm(int hwm)
     {
         //  Compute the low water mark. Following point should be taken
@@ -548,6 +581,7 @@ public class Pipe extends ZObject
     }
 
     //  Handler for delimiter read from the pipe.
+    @Impure
     private void processDelimiter()
     {
         assert (state == State.ACTIVE || state == State.WAITING_FOR_DELIMITER);
@@ -565,6 +599,7 @@ public class Pipe extends ZObject
     //  Temporarily disconnects the inbound message stream and drops
     //  all the messages on the fly. Causes 'hiccuped' event to be generated
     //  in the peer.
+    @Impure
     public void hiccup()
     {
         //  If termination is already under way do nothing.
@@ -589,12 +624,14 @@ public class Pipe extends ZObject
         sendHiccup(peer, inpipe);
     }
 
+    @Impure
     public void setHwms(int inhwm, int outhwm)
     {
         lwm = computeLwm(inhwm);
         hwm = outhwm;
     }
 
+    @Pure
     public boolean checkHwm()
     {
         // TODO DIFF V4 small change, it is done like this in 4.2.2
@@ -602,11 +639,13 @@ public class Pipe extends ZObject
         return !full;
     }
 
+    @Impure
     public void setDisconnectMsg(Msg msg)
     {
         disconnectMsg = msg;
     }
 
+    @Impure
     public void sendDisconnectMsg()
     {
         if (disconnectMsg != null && outpipe != null) {
@@ -619,6 +658,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     public void sendHiccupMsg(Msg hiccupMsg)
     {
         if (hiccupMsg != null && outpipe != null) {
@@ -630,6 +670,7 @@ public class Pipe extends ZObject
         }
     }
 
+    @Impure
     @Override
     public String toString()
     {

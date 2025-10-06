@@ -1,5 +1,8 @@
 package zmq.poll;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,6 +19,7 @@ abstract class PollerBase implements Runnable
 
         private boolean cancelled;
 
+        @SideEffectFree
         public TimerInfo(IPollEvents sink, int id)
         {
             assert (sink != null);
@@ -23,6 +27,7 @@ abstract class PollerBase implements Runnable
             this.id = id;
         }
 
+        @Pure
         @Override
         public int hashCode()
         {
@@ -33,6 +38,7 @@ abstract class PollerBase implements Runnable
             return result;
         }
 
+        @Pure
         @Override
         public boolean equals(Object other)
         {
@@ -49,6 +55,7 @@ abstract class PollerBase implements Runnable
             return this.id == that.id && this.sink.equals(that.sink);
         }
 
+        @Pure
         @Override
         public String toString()
         {
@@ -68,16 +75,20 @@ abstract class PollerBase implements Runnable
     // did timers expiration add timer ?
     private boolean changed;
 
+    @Impure
     protected PollerBase(String name)
     {
         worker = createWorker(name);
     }
 
+    @SideEffectFree
+    @Impure
     protected PollerBase(String name, BiFunction<Runnable, String, Thread> threadFactory)
     {
         worker = threadFactory.apply(this, name);
    }
 
+    @Impure
     Thread createWorker(String name)
     {
         Thread worker = new Thread(this, name);
@@ -85,11 +96,14 @@ abstract class PollerBase implements Runnable
         return worker;
     }
 
+    @Impure
     long clock()
     {
         return Clock.nowMS();
     }
 
+    @Pure
+    @Impure
     final boolean isEmpty()
     {
         return timers.isEmpty();
@@ -97,12 +111,14 @@ abstract class PollerBase implements Runnable
 
     //  Returns load of the poller. Note that this function can be
     //  invoked from a different thread!
+    @Impure
     public final int getLoad()
     {
         return load.get();
     }
 
     //  Called by individual poller implementations to manage the load.
+    @Impure
     protected void adjustLoad(int amount)
     {
         load.addAndGet(amount);
@@ -111,6 +127,7 @@ abstract class PollerBase implements Runnable
     //  Add a timeout to expire in timeout_ milliseconds. After the
     //  expiration timerEvent on sink_ object will be called with
     //  argument set to id_.
+    @Impure
     public void addTimer(long timeout, IPollEvents sink, int id)
     {
         assert (Thread.currentThread() == worker);
@@ -123,6 +140,7 @@ abstract class PollerBase implements Runnable
     }
 
     //  Cancel the timer created by sink_ object with ID equal to id_.
+    @Impure
     public void cancelTimer(IPollEvents sink, int id)
     {
         assert (Thread.currentThread() == worker);
@@ -139,6 +157,7 @@ abstract class PollerBase implements Runnable
 
     //  Executes any timers that are due. Returns number of milliseconds
     //  to wait to match the next timer or 0 meaning "no timers".
+    @Impure
     protected long executeTimers()
     {
         assert (Thread.currentThread() == worker);

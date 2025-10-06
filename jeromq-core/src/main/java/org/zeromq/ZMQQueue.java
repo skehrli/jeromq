@@ -1,5 +1,7 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
@@ -18,12 +20,14 @@ public class ZMQQueue implements Runnable
      * @param outSocket
      *            output socket
      */
+    @SideEffectFree
     public ZMQQueue(Context context, Socket inSocket, Socket outSocket)
     {
         this.inSocket = inSocket;
         this.outSocket = outSocket;
     }
 
+    @Impure
     @Override
     public void run()
     {

@@ -1,5 +1,8 @@
 package org.zeromq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.PrintStream;
 import java.util.Arrays;
 
@@ -11,6 +14,7 @@ public class ZData
 
     private final byte[] data;
 
+    @SideEffectFree
     public ZData(byte[] data)
     {
         this.data = data;
@@ -22,6 +26,8 @@ public class ZData
      * @param str String to compare with data
      * @return True if data matches given string
      */
+    @SideEffectFree
+    @Impure
     public boolean streq(String str)
     {
         return streq(data, str);
@@ -34,6 +40,7 @@ public class ZData
      * @param data the binary data to compare
      * @return True if data matches given string
      */
+    @SideEffectFree
     public static boolean streq(byte[] data, String str)
     {
         if (data == null) {
@@ -42,11 +49,13 @@ public class ZData
         return new String(data, ZMQ.CHARSET).compareTo(str) == 0;
     }
 
+    @Pure
     public boolean equals(byte[] that)
     {
         return Arrays.equals(data, that);
     }
 
+    @Pure
     @Override
     public boolean equals(Object other)
     {
@@ -63,6 +72,7 @@ public class ZData
         return Arrays.equals(this.data, that.data);
     }
 
+    @Pure
     @Override
     public int hashCode()
     {
@@ -74,11 +84,13 @@ public class ZData
      * @return
      *          A text string or hex-encoded string if data contains any non-printable ASCII characters
      */
+    @Impure
     public String toString()
     {
         return toString(data);
     }
 
+    @Impure
     public static String toString(byte[] data)
     {
         if (data == null) {
@@ -103,11 +115,13 @@ public class ZData
     /**
      * @return data as a printable hex string
      */
+    @Impure
     public String strhex()
     {
         return strhex(data);
     }
 
+    @Impure
     public static String strhex(byte[] data)
     {
         if (data == null) {
@@ -123,11 +137,13 @@ public class ZData
         return b.toString();
     }
 
+    @Impure
     public void print(PrintStream out, String prefix)
     {
         print(out, prefix, data, data.length);
     }
 
+    @Impure
     public static void print(PrintStream out, String prefix, byte[] data, int size)
     {
         if (data == null) {

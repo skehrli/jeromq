@@ -1,5 +1,8 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.channels.SelectableChannel;
 import java.time.Duration;
 import java.util.Objects;
@@ -111,8 +114,10 @@ public class ZEvent
      */
     public interface ZEventConsummer extends zmq.ZMQ.EventConsummer
     {
+        @SideEffectFree
         void consume(ZEvent ev);
 
+        @Impure
         default void consume(zmq.ZMQ.Event event)
         {
             consume(new ZEvent(event, SelectableChannel.class::cast));
@@ -125,6 +130,7 @@ public class ZEvent
     private final Object value;
     private final String address;
 
+    @Impure
     private ZEvent(zmq.ZMQ.Event event, Function<Object, SelectableChannel> getResolveChannel)
     {
         this.event = ZMonitor.Event.findByCode(event.event);
@@ -132,6 +138,7 @@ public class ZEvent
         this.value = resolve(this.event, event.arg, getResolveChannel);
     }
 
+    @Impure
     static Object resolve(Event event, Object value, Function<Object, SelectableChannel> getResolveChannel)
     {
         switch (event) {
@@ -163,6 +170,7 @@ public class ZEvent
         }
     }
 
+    @Pure
     public Event getEvent()
     {
         return event;
@@ -180,12 +188,14 @@ public class ZEvent
      * @param <M> The expected type of the returned object
      * @return The resolved value.
      */
+    @Pure
     @SuppressWarnings("unchecked")
     public <M> M getValue()
     {
         return (M) value;
     }
 
+    @Pure
     public String getAddress()
     {
         return address;
@@ -198,6 +208,7 @@ public class ZEvent
      * considered as an error.
      * @return true if the event was an error
      */
+    @Pure
     public boolean isError()
     {
         switch (event) {
@@ -219,6 +230,7 @@ public class ZEvent
      * considered as a warning.
      * @return true if the event was a warning
      */
+    @Pure
     public boolean isWarn()
     {
         return event == Event.HANDSHAKE_FAILED_AUTH;
@@ -231,6 +243,7 @@ public class ZEvent
      * considered as a warning.
      * @return true if the event was a warning
      */
+    @Pure
     public boolean isInformation()
     {
         return event == Event.DISCONNECTED;
@@ -243,6 +256,7 @@ public class ZEvent
      * considered as an error.
      * @return true if the event was an error
      */
+    @Pure
     public boolean isDebug()
     {
         switch (event) {
@@ -261,6 +275,7 @@ public class ZEvent
         }
     }
 
+    @Pure
     @Override
     public boolean equals(Object o)
     {
@@ -276,12 +291,14 @@ public class ZEvent
         }
     }
 
+    @Pure
     @Override
     public int hashCode()
     {
         return Objects.hash(event, value, address);
     }
 
+    @Pure
     @Override
     public String toString()
     {
@@ -296,6 +313,7 @@ public class ZEvent
      * @return the received event or null if no message was received.
      * @throws ZMQException In case of errors with the monitor socket
      */
+    @Impure
     public static ZEvent recv(Socket socket, int flags)
     {
         zmq.ZMQ.Event e = zmq.ZMQ.Event.read(socket.base(), flags);
@@ -318,6 +336,7 @@ public class ZEvent
      * @return the received event or null if no message was received.
      * @throws ZMQException In case of errors with the monitor socket
      */
+    @Impure
     public static ZEvent recv(ZMQ.Socket socket)
     {
         return recv(socket, 0);

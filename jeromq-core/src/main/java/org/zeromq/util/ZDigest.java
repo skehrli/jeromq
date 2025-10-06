@@ -1,5 +1,6 @@
 package org.zeromq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -17,6 +18,7 @@ public class ZDigest
     /**
      * Creates a new digester.
      */
+    @Impure
     public ZDigest()
     {
         this(new byte[8192]);
@@ -26,6 +28,7 @@ public class ZDigest
      * Creates a new digester.
      * @param buffer the temp buffer used for computation of streams.
      */
+    @Impure
     public ZDigest(byte[] buffer)
     {
         this.buffer = buffer;
@@ -37,6 +40,7 @@ public class ZDigest
         }
     }
 
+    @Impure
     public ZDigest update(InputStream input) throws IOException
     {
         int read = input.read(buffer);
@@ -48,27 +52,32 @@ public class ZDigest
         return this;
     }
 
+    @Impure
     public ZDigest update(byte[] input)
     {
         return update(input, 0, input.length);
     }
 
+    @Impure
     public ZDigest update(byte[] input, int offset, int length)
     {
         sha1.update(input, offset, length);
         return this;
     }
 
+    @Impure
     public byte[] data()
     {
         return sha1.digest();
     }
 
+    @Impure
     public int size()
     {
         return sha1.digest().length;
     }
 
+    @Impure
     public String string()
     {
         return ZData.toString(data());

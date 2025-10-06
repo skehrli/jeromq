@@ -1,5 +1,8 @@
 package zmq.io.net.tcp;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -18,11 +21,14 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
 {
     public static class TcpAddressMask extends TcpAddress
     {
+        @Impure
         public TcpAddressMask(String addr, boolean ipv6)
         {
             super(addr, ipv6);
         }
 
+        @Pure
+        @Impure
         public boolean matchAddress(SocketAddress addr)
         {
             return address().equals(addr);
@@ -32,6 +38,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
     private final InetSocketAddress address;
     private final InetSocketAddress sourceAddress;
 
+    @Impure
     public TcpAddress(String addr, boolean ipv6)
     {
         String[] strings = addr.split(";");
@@ -45,12 +52,14 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
         }
     }
 
+    @SideEffectFree
     protected TcpAddress(InetSocketAddress address)
     {
         this.address = address;
         sourceAddress = null;
     }
 
+    @Impure
     @Override
     public ProtocolFamily family()
     {
@@ -63,6 +72,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
     }
 
     // The opposite to resolve()
+    @Impure
     @Override
     public String toString()
     {
@@ -70,6 +80,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
     }
 
     // The opposite to resolve()
+    @Impure
     @Override
     public String toString(int port)
     {
@@ -96,6 +107,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
      * @return the resolved address
      * @see zmq.io.net.Address.IZAddress#resolve(java.lang.String, boolean, boolean)
      */
+    @Impure
     @Override
     public InetSocketAddress resolve(String name, boolean ipv6, boolean local)
     {
@@ -170,12 +182,14 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
         return new InetSocketAddress(addrNet, port);
     }
 
+    @Pure
     @Override
     public InetSocketAddress address()
     {
         return address;
     }
 
+    @Pure
     @Override
     public InetSocketAddress sourceAddress()
     {

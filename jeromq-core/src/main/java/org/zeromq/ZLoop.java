@@ -1,5 +1,9 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,6 +25,7 @@ public class ZLoop
 {
     public interface IZLoopHandler
     {
+        @Pure
         int handle(ZLoop loop, PollItem item, Object arg);
     }
 
@@ -31,6 +36,7 @@ public class ZLoop
         final Object        arg;
         int           errors; //  If too many errors, kill poller
 
+        @SideEffectFree
         protected SPoller(PollItem item, IZLoopHandler handler, Object arg)
         {
             this.item = item;
@@ -49,6 +55,7 @@ public class ZLoop
         final Object        arg;
         long          when;   //  Clock time when alarm goes off
 
+        @SideEffectFree
         public STimer(int delay, int times, IZLoopHandler handler, Object arg)
         {
             this.delay = delay;
@@ -64,6 +71,7 @@ public class ZLoop
     private final List<SPoller> pollers;   //  List of poll items
     private final List<STimer>  timers;    //  List of timers
     private int                 pollSize;  //  Size of poll set
+    @Owning
     private Poller              pollset;   //  zmq_poll set
     private SPoller[]           pollact;   //  Pollers for this poll set
     private boolean             dirty;     //  True if pollset needs rebuilding
@@ -71,6 +79,7 @@ public class ZLoop
     private final List<Object>  zombies;   //  List of timers to kill
     private final List<STimer>  newTimers; //  List of timers to add
 
+    @Impure
     public ZLoop(Context context)
     {
         Objects.requireNonNull(context, "Context has to be supplied for ZLoop");
@@ -82,6 +91,7 @@ public class ZLoop
         newTimers = new ArrayList<>();
     }
 
+    @Impure
     public ZLoop(ZContext ctx)
     {
         this(ctx.getContext());
@@ -90,6 +100,7 @@ public class ZLoop
     /**
      * @deprecated no-op behaviour
      */
+    @SideEffectFree
     @Deprecated
     public void destroy()
     {
@@ -100,6 +111,7 @@ public class ZLoop
     //  register/cancel pollers orthogonally to executing the pollset
     //  activity on pollers. Returns 0 on success, -1 on failure.
 
+    @Impure
     private void rebuild()
     {
         pollact = null;
@@ -122,6 +134,7 @@ public class ZLoop
         dirty = false;
     }
 
+    @Impure
     private long ticklessTimer()
     {
         //  Calculate tickless timer, up to 1 hour
@@ -149,6 +162,7 @@ public class ZLoop
     //  If you register the pollitem more than once, each instance will invoke its
     //  corresponding handler.
 
+    @Impure
     public int addPoller(PollItem pollItem, IZLoopHandler handler, Object arg)
     {
         if (pollItem.getRawSocket() == null && pollItem.getSocket() == null) {
@@ -174,6 +188,7 @@ public class ZLoop
     //  are specified, uses only socket. If multiple poll items exist for same
     //  socket/FD, cancels ALL of them.
 
+    @Impure
     public void removePoller(PollItem pollItem)
     {
         Iterator<SPoller> it = pollers.iterator();
@@ -200,6 +215,7 @@ public class ZLoop
     //  run a timer forever, use 0 times. Returns 0 if OK, -1 if there was an
     //  error.
 
+    @Impure
     public int addTimer(int delay, int times, IZLoopHandler handler, Object arg)
     {
         STimer timer = new STimer(delay, times, handler, arg);
@@ -219,6 +235,7 @@ public class ZLoop
     //  Cancel all timers for a specific argument (as provided in zloop_timer)
     //  Returns 0 on success.
 
+    @Impure
     public int removeTimer(Object arg)
     {
         Objects.requireNonNull(arg, "Argument has to be supplied");
@@ -236,6 +253,7 @@ public class ZLoop
 
     //  --------------------------------------------------------------------------
     //  Set verbose tracing of reactor on/off
+    @Impure
     public void verbose(boolean verbose)
     {
         this.verbose = verbose;
@@ -248,6 +266,7 @@ public class ZLoop
     //  cancel sockets. Returns 0 if interrupted, -1 if cancelled by a
     //  handler, positive on internal error
 
+    @Impure
     public int start()
     {
         int rc = 0;

@@ -1,5 +1,8 @@
 package zmq.io.mechanism.plain;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -28,12 +31,15 @@ public class PlainServerMechanism extends Mechanism
 
     private State state;
 
+    @SideEffectFree
+    @Impure
     public PlainServerMechanism(SessionBase session, Address peerAddress, Options options)
     {
         super(session, peerAddress, options);
         this.state = State.WAITING_FOR_HELLO;
     }
 
+    @Impure
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
@@ -65,6 +71,7 @@ public class PlainServerMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public int processHandshakeCommand(Msg msg)
     {
@@ -84,6 +91,7 @@ public class PlainServerMechanism extends Mechanism
         return rc;
     }
 
+    @Pure
     @Override
     public Status status()
     {
@@ -98,6 +106,7 @@ public class PlainServerMechanism extends Mechanism
         }
     }
 
+    @Impure
     @Override
     public int zapMsgAvailable()
     {
@@ -112,6 +121,7 @@ public class PlainServerMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     private int produceHello(Msg msg)
     {
         int bytesLeft = msg.size();
@@ -174,12 +184,14 @@ public class PlainServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceWelcome(Msg msg)
     {
         msg.putShortString("WELCOME");
         return 0;
     }
 
+    @Impure
     private int produceInitiate(Msg msg)
     {
         int bytesLeft = msg.size();
@@ -194,6 +206,7 @@ public class PlainServerMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     private int produceReady(Msg msg)
     {
         //  Add command name
@@ -211,6 +224,7 @@ public class PlainServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceError(Msg msg)
     {
         assert (statusCode != null && statusCode.length() == 3);
@@ -221,6 +235,7 @@ public class PlainServerMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private void sendZapRequest(byte[] username, byte[] password)
     {
         sendZapRequest(Mechanisms.PLAIN, true);

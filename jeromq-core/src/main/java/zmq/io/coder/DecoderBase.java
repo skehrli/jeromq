@@ -1,5 +1,7 @@
 package zmq.io.coder;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -36,6 +38,7 @@ public abstract class DecoderBase implements IDecoder
 
     private final Errno errno;
 
+    @Impure
     public DecoderBase(Errno errno, int bufsize)
     {
         next = null;
@@ -48,6 +51,7 @@ public abstract class DecoderBase implements IDecoder
     }
 
     //  Returns a buffer to be filled with binary data.
+    @Impure
     @Override
     public ByteBuffer getBuffer()
     {
@@ -74,6 +78,7 @@ public abstract class DecoderBase implements IDecoder
     //  get_buffer function. size_ argument specifies number of bytes
     //  actually filled into the buffer. Function returns number of
     //  bytes actually processed.
+    @Impure
     @Override
     public Step.Result decode(ByteBuffer data, int size, ValueReference<Integer> processed)
     {
@@ -120,11 +125,13 @@ public abstract class DecoderBase implements IDecoder
         return Step.Result.MORE_DATA;
     }
 
+    @Impure
     protected void nextStep(Msg msg, Step next)
     {
         nextStep(msg.buf(), next);
     }
 
+    @Impure
     @Deprecated
     protected void nextStep(byte[] buf, int toRead, Step next)
     {
@@ -134,6 +141,7 @@ public abstract class DecoderBase implements IDecoder
         this.next = next;
     }
 
+    @Impure
     protected void nextStep(ByteBuffer buf, Step next)
     {
         readPos = buf;
@@ -141,16 +149,19 @@ public abstract class DecoderBase implements IDecoder
         this.next = next;
     }
 
+    @Impure
     protected void errno(int err)
     {
         this.errno.set(err);
     }
 
+    @Impure
     public int errno()
     {
         return errno.get();
     }
 
+    @SideEffectFree
     @Override
     public void destroy()
     {

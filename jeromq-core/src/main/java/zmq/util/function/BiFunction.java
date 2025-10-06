@@ -1,4 +1,5 @@
 package zmq.util.function;
+import org.checkerframework.dataflow.qual.Pure;
 
 /**
  * Represents a function that accepts two arguments and produces a result.
@@ -22,5 +23,6 @@ public interface BiFunction<T, U, R>
      * @param u the second function argument
      * @return the function result
      */
+    @Pure
     R apply(T t, U u);
 }

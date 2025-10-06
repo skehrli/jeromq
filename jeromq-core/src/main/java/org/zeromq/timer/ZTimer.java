@@ -1,5 +1,7 @@
 package org.zeromq.timer;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.util.Draft;
 import zmq.util.Timers;
 import zmq.util.function.Supplier;
@@ -22,6 +24,7 @@ public final class ZTimer
     {
         private final Timers.Timer delegate;
 
+        @SideEffectFree
         Timer(Timers.Timer delegate)
         {
             this.delegate = delegate;
@@ -34,6 +37,7 @@ public final class ZTimer
          * @param interval the new interval of the time.
          * @return true if set, otherwise false.
          */
+        @Impure
         public boolean setInterval(long interval)
         {
             return delegate.setInterval(interval);
@@ -45,6 +49,7 @@ public final class ZTimer
          * This method is slow, canceling existing and adding a new timer yield better performance.
          * @return true if reset, otherwise false.
          */
+        @Impure
         public boolean reset()
         {
             return delegate.reset();
@@ -55,6 +60,7 @@ public final class ZTimer
          *
          * @return true if cancelled, otherwise false.
          */
+        @Impure
         public boolean cancel()
         {
             return delegate.cancel();
@@ -63,11 +69,14 @@ public final class ZTimer
 
     private final Timers timer;
 
+    @Impure
     public ZTimer()
     {
         timer = new Timers();
     }
 
+    @SideEffectFree
+    @Impure
     ZTimer(Supplier<Long> clock)
     {
         timer = new Timers(clock);
@@ -80,6 +89,7 @@ public final class ZTimer
      * @param args the optional arguments for the handler.
      * @return an opaque handle for further cancel.
      */
+    @Impure
     public Timer add(long interval, TimerHandler handler, Object... args)
     {
         if (handler == null) {
@@ -93,6 +103,7 @@ public final class ZTimer
      *
      * @return the time in millisecond until the next timer.
      */
+    @Impure
     public long timeout()
     {
         return timer.timeout();
@@ -103,6 +114,7 @@ public final class ZTimer
      *
      * @return the number of timers triggered.
      */
+    @Impure
     public int execute()
     {
         return timer.execute();
@@ -113,6 +125,7 @@ public final class ZTimer
      *
      * @return the number of timers triggered.
      */
+    @Impure
     public int sleepAndExecute()
     {
         return timer.sleepAndExecute();

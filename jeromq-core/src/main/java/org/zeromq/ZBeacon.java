@@ -1,5 +1,7 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -48,26 +50,31 @@ public class ZBeacon
     private final AtomicReference<Thread.UncaughtExceptionHandler> clientExHandler = new AtomicReference<>();
     private final AtomicReference<Thread.UncaughtExceptionHandler> serverExHandler = new AtomicReference<>();
 
+    @Impure
     public ZBeacon(int port, byte[] beacon)
     {
         this(DEFAULT_BROADCAST_HOST, port, beacon);
     }
 
+    @Impure
     public ZBeacon(String host, int port, byte[] beacon)
     {
         this(host, port, beacon, true);
     }
 
+    @Impure
     public ZBeacon(String host, int port, byte[] beacon, boolean ignoreLocalAddress)
     {
         this(host, port, beacon, ignoreLocalAddress, false);
     }
 
+    @Impure
     public ZBeacon(String host, int port, byte[] beacon, boolean ignoreLocalAddress, boolean blocking)
     {
         this(host, DEFAULT_BROADCAST_ADDRESS.getAddress(), port, beacon, DEFAULT_BROADCAST_INTERVAL, ignoreLocalAddress, blocking);
     }
 
+    @Impure
     public ZBeacon(InetAddress broadcastAddress, InetAddress serverAddress, int port, byte[] beacon, long broadcastInterval, boolean ignoreLocalAddress, boolean blocking)
     {
         Objects.requireNonNull(broadcastAddress, "Host cannot be null");
@@ -79,6 +86,7 @@ public class ZBeacon
         broadcastClient = new BroadcastClient(serverAddress, broadcastAddress, port, this.broadcastInterval);
     }
 
+    @Impure
     @Deprecated
     public ZBeacon(String broadcastAddress, byte[] serverAddress, int port, byte[] beacon, long broadcastInterval, boolean ignoreLocalAddress, boolean blocking)
     {
@@ -111,18 +119,21 @@ public class ZBeacon
         private Thread.UncaughtExceptionHandler clientExHandler = null;
         private Thread.UncaughtExceptionHandler serverExHandler = null;
 
+        @Impure
         public Builder port(int port)
         {
             this.port = port;
             return this;
         }
 
+        @Impure
         public Builder beacon(byte[] beacon)
         {
             this.beacon = beacon;
             return this;
         }
 
+        @Impure
         @Deprecated
         public Builder client(String host)
         {
@@ -135,12 +146,14 @@ public class ZBeacon
             return this;
         }
 
+        @Impure
         public Builder client(InetAddress host)
         {
             this.clientHost = host;
             return this;
         }
 
+        @Impure
         @Deprecated
         public Builder server(byte[] addr)
         {
@@ -154,12 +167,14 @@ public class ZBeacon
             return this;
         }
 
+        @Impure
         public Builder server(InetAddress addr)
         {
             this.serverAddr = addr;
             return this;
         }
 
+        @Impure
         public Builder ignoreLocalAddress(boolean ignoreLocalAddress)
         {
             this.ignoreLocalAddress = ignoreLocalAddress;
@@ -171,6 +186,7 @@ public class ZBeacon
          * @param blocking
          * @return
          */
+        @Impure
         @Deprecated
         public Builder blocking(boolean blocking)
         {
@@ -178,36 +194,42 @@ public class ZBeacon
             return this;
         }
 
+        @Impure
         public Builder broadcastInterval(long broadcastInterval)
         {
             this.broadcastInterval = broadcastInterval;
             return this;
         }
 
+        @Impure
         public Builder listener(Listener listener)
         {
             this.listener = listener;
             return this;
         }
 
+        @Impure
         public Builder prefix(byte[] prefix)
         {
             this.prefix = Arrays.copyOf(prefix, prefix.length);
             return this;
         }
 
+        @Impure
         public Builder setClientUncaughtExceptionHandlers(Thread.UncaughtExceptionHandler clientExHandler)
         {
             this.clientExHandler = clientExHandler;
             return this;
         }
 
+        @Impure
         public Builder setServerUncaughtExceptionHandlers(Thread.UncaughtExceptionHandler serverExHandler)
         {
             this.serverExHandler = serverExHandler;
             return this;
         }
 
+        @Impure
         public ZBeacon build()
         {
             ZBeacon zbeacon = new ZBeacon(clientHost, serverAddr, port, beacon, broadcastInterval, ignoreLocalAddress, blocking);
@@ -232,6 +254,7 @@ public class ZBeacon
      * @param clientExHandler
      * @param serverExHandler
      */
+    @Impure
     @Deprecated
     public void setUncaughtExceptionHandlers(Thread.UncaughtExceptionHandler clientExHandler,
                                              Thread.UncaughtExceptionHandler serverExHandler)
@@ -240,6 +263,7 @@ public class ZBeacon
         this.serverExHandler.set(serverExHandler);
     }
 
+    @Impure
     public void startClient()
     {
         if (!broadcastClient.isRunning) {
@@ -253,6 +277,7 @@ public class ZBeacon
         }
     }
 
+    @Impure
     public void startServer()
     {
         if (!broadcastServer.isRunning) {
@@ -268,12 +293,14 @@ public class ZBeacon
         }
     }
 
+    @Impure
     public void start()
     {
         startClient();
         startServer();
     }
 
+    @Impure
     public void stop() throws InterruptedException
     {
         if (broadcastClient.thread != null) {
@@ -290,12 +317,14 @@ public class ZBeacon
      * @deprecated use the builder
      * @param beacon
      */
+    @Impure
     @Deprecated
     public void setBeacon(byte[] beacon)
     {
         this.beacon.set(Arrays.copyOf(beacon, beacon.length));
     }
 
+    @Impure
     public byte[] getBeacon()
     {
         byte[] beaconBuffer = beacon.get();
@@ -306,12 +335,14 @@ public class ZBeacon
      * @deprecated use the builder
      * @param prefix
      */
+    @Impure
     @Deprecated
     public void setPrefix(byte[] prefix)
     {
         this.prefix.set(Arrays.copyOf(prefix, prefix.length));
     }
 
+    @Impure
     public byte[] getPrefix()
     {
         byte[] prefixBuffer = prefix.get();
@@ -322,12 +353,14 @@ public class ZBeacon
      * @deprecated use the builder
      * @param listener
      */
+    @Impure
     @Deprecated
     public void setListener(Listener listener)
     {
         this.listener.set(listener);
     }
 
+    @Impure
     public Listener getListener()
     {
         return listener.get();
@@ -338,6 +371,7 @@ public class ZBeacon
      */
     public interface Listener
     {
+        @SideEffectFree
         void onBeacon(InetAddress sender, byte[] beacon);
     }
 
@@ -352,6 +386,7 @@ public class ZBeacon
         private boolean                 isRunning;
         private Thread                  thread;
 
+        @Impure
         public BroadcastClient(InetAddress interfaceAddress, InetAddress broadcastAddress, int port, AtomicLong broadcastInterval)
         {
             this.broadcastInterval = broadcastInterval;
@@ -359,6 +394,7 @@ public class ZBeacon
             this.interfaceAddress = interfaceAddress;
         }
 
+        @Impure
         @Override
         public void run()
         {
@@ -405,6 +441,7 @@ public class ZBeacon
         private Thread                thread;
         private boolean               isRunning;
 
+        @Impure
         public BroadcastServer(int port, boolean ignoreLocalAddress)
         {
             this.ignoreLocalAddress = ignoreLocalAddress;
@@ -420,6 +457,7 @@ public class ZBeacon
             }
         }
 
+        @Impure
         @Override
         public void run()
         {
@@ -457,6 +495,7 @@ public class ZBeacon
             }
         }
 
+        @Impure
         private void handleMessage(ByteBuffer buffer, InetAddress from)
         {
             byte[] prefix = ZBeacon.this.prefix.get();
@@ -476,11 +515,13 @@ public class ZBeacon
         }
     }
 
+    @Impure
     public long getBroadcastInterval()
     {
         return broadcastInterval.get();
     }
 
+    @Impure
     public void setBroadcastInterval(long broadcastInterval)
     {
         this.broadcastInterval.set(broadcastInterval);

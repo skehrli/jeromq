@@ -1,5 +1,8 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import zmq.pipe.YPipe;
 import zmq.util.Errno;
 
@@ -8,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
 
+@InheritableMustCall("close")
 @Deprecated
 public class MailboxSafe implements IMailbox
 {
@@ -27,6 +31,7 @@ public class MailboxSafe implements IMailbox
 
     private final Errno errno;
 
+    @Impure
     public MailboxSafe(Ctx ctx, ReentrantLock sync, String name)
     {
         this.errno = ctx.errno();
@@ -43,21 +48,25 @@ public class MailboxSafe implements IMailbox
         assert (cmd == null);
     }
 
+    @Impure
     public void addSignaler(Signaler signaler)
     {
         this.signalers.add(signaler);
     }
 
+    @Impure
     public void removeSignaler(Signaler signaler)
     {
         this.signalers.remove(signaler);
     }
 
+    @Impure
     public void clearSignalers()
     {
         this.signalers.clear();
     }
 
+    @Impure
     @Override
     public void send(Command cmd)
     {
@@ -79,6 +88,7 @@ public class MailboxSafe implements IMailbox
         }
     }
 
+    @Impure
     @Override
     public Command recv(long timeout)
     {
@@ -124,6 +134,7 @@ public class MailboxSafe implements IMailbox
         return cmd;
     }
 
+    @Impure
     @Override
     public void close()
     {
@@ -133,6 +144,7 @@ public class MailboxSafe implements IMailbox
         sync.unlock();
     }
 
+    @SideEffectFree
     @Override
     public String toString()
     {

@@ -1,5 +1,8 @@
 package org.zeromq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -19,51 +22,65 @@ public class ZMetadata
 {
     private final Metadata metadata;
 
+    @SideEffectFree
+    @Impure
     public ZMetadata()
     {
         this(new Metadata());
     }
 
+    @SideEffectFree
     public ZMetadata(Metadata metadata)
     {
         this.metadata = metadata;
     }
 
+    @SideEffectFree
+    @Impure
     public Set<String> keySet()
     {
         return metadata.keySet();
     }
 
+    @Pure
+    @Impure
     public String get(String key)
     {
         return metadata.get(key);
     }
 
+    @Impure
     public void set(String key, String value)
     {
         metadata.put(key, value);
     }
 
+    @Impure
     public void remove(String key)
     {
         metadata.remove(key);
     }
 
+    @Impure
     public byte[] bytes()
     {
         return metadata.bytes();
     }
 
+    @Pure
+    @SideEffectFree
     public String toString()
     {
         return metadata.toString();
     }
 
+    @Pure
     public int hashCode()
     {
         return metadata.hashCode();
     }
 
+    @Pure
     @Override
     public boolean equals(Object o)
     {
@@ -93,6 +110,8 @@ public class ZMetadata
      *
      * @return a set view of the properties contained in this metadata
      */
+    @SideEffectFree
+    @Impure
     public Set<Entry<String, String>> entrySet()
     {
         return metadata.entrySet();
@@ -113,11 +132,14 @@ public class ZMetadata
      *
      * @return a collection view of the values contained in this map
      */
+    @SideEffectFree
+    @Impure
     public Collection<String> values()
     {
         return metadata.values();
     }
 
+    @Impure
     public void set(Metadata zapProperties)
     {
         metadata.set(zapProperties);
@@ -128,6 +150,8 @@ public class ZMetadata
      *
      * @return {@code true} if this map contains no key-value mappings
      */
+    @Pure
+    @Impure
     public boolean isEmpty()
     {
         return metadata.isEmpty();
@@ -139,6 +163,8 @@ public class ZMetadata
      * @param property property the name of the property to be tested.
      * @return {@code true} if this metada contains the property
      */
+    @Pure
+    @Impure
     public boolean containsKey(String property)
     {
         return metadata.containsKey(property);
@@ -148,6 +174,7 @@ public class ZMetadata
      * Removes all the properties.
      * The map will be empty after this call returns.
      */
+    @Impure
     public void clear()
     {
         metadata.clear();
@@ -159,6 +186,8 @@ public class ZMetadata
      *
      * @return the number of properties
      */
+    @Pure
+    @Impure
     public int size()
     {
         return metadata.size();
@@ -177,11 +206,13 @@ public class ZMetadata
      * @throws IOException           if an I/O error occurs.
      * @throws IllegalStateException if one of the properties name size is bigger than 255
      */
+    @Impure
     public void write(OutputStream stream) throws IOException
     {
         metadata.write(stream);
     }
 
+    @Impure
     public static ZMetadata read(String meta)
     {
         if (meta == null || meta.isEmpty()) {
@@ -198,6 +229,7 @@ public class ZMetadata
         }
     }
 
+    @Impure
     public static ZMetadata read(ZConfig conf)
     {
         ZConfig meta = conf.getChild("metadata");

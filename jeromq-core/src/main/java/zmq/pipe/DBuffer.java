@@ -1,5 +1,9 @@
 package zmq.pipe;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,17 +18,22 @@ class DBuffer<T extends Msg>
 
     private boolean hasMsg;
 
+    @NotOwning
+    @Pure
     public T back()
     {
         return back;
     }
 
+    @NotOwning
+    @Pure
     public T front()
     {
         return front;
     }
 
-    void write(T msg)
+    @Impure
+    void write(@Owning T msg)
     {
         assert (msg.check());
         sync.lock();
@@ -38,6 +47,8 @@ class DBuffer<T extends Msg>
         }
     }
 
+    @NotOwning
+    @Impure
     T read()
     {
         sync.lock();
@@ -57,6 +68,7 @@ class DBuffer<T extends Msg>
         }
     }
 
+    @Impure
     boolean checkRead()
     {
         sync.lock();
@@ -68,6 +80,8 @@ class DBuffer<T extends Msg>
         }
     }
 
+    @NotOwning
+    @Impure
     T probe()
     {
         sync.lock();

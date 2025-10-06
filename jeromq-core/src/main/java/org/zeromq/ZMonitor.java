@@ -1,5 +1,9 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +21,7 @@ import zmq.util.Objects;
  * connected, listen, disconnected, etc. Socket events are only available
  * for sockets connecting or bound to ipc:// and tcp:// endpoints.
  */
+@InheritableMustCall("close")
 public class ZMonitor implements Closeable
 {
     /**
@@ -48,6 +53,7 @@ public class ZMonitor implements Closeable
          */
         public final String value;
 
+        @Impure
         private ZEvent(ZMsg msg)
         {
             assert (msg != null);
@@ -68,6 +74,8 @@ public class ZMonitor implements Closeable
             }
         }
 
+        @SideEffectFree
+        @Impure
         @SuppressWarnings("deprecation")
         public ZEvent(ZMQ.Event event)
         {
@@ -83,6 +91,7 @@ public class ZMonitor implements Closeable
             }
         }
 
+        @Pure
         @Override
         public String toString()
         {
@@ -122,6 +131,7 @@ public class ZMonitor implements Closeable
 
         private final int code;
 
+        @Impure
         Event(int code)
         {
             this.code = code;
@@ -132,6 +142,7 @@ public class ZMonitor implements Closeable
          * @param event the numerical event code
          * @return the found {@link Event}
          */
+        @Pure
         public static Event findByCode(int event)
         {
             return MAP.getOrDefault(event, ALL);
@@ -176,6 +187,7 @@ public class ZMonitor implements Closeable
 
         private final int code;
 
+        @Impure
         ProtocolCode(int code)
         {
             this.code = code;
@@ -186,6 +198,7 @@ public class ZMonitor implements Closeable
          * @param code the numerical error code
          * @return the found {@link ProtocolCode}
          */
+        @Pure
         public static ProtocolCode findByCode(int code)
         {
             if (MAP.containsKey(code)) {
@@ -204,6 +217,7 @@ public class ZMonitor implements Closeable
      * Event types have to be added before the start, or they will take no effect.
      * @return this instance.
      */
+    @Impure
     public final ZMonitor start()
     {
         if (started) {
@@ -220,6 +234,7 @@ public class ZMonitor implements Closeable
      * Stops the monitoring and closes the actor.
      * When returning from that call, ZMonitor will be no more active.
      */
+    @Impure
     @Override
     public final void close()
     {
@@ -230,6 +245,7 @@ public class ZMonitor implements Closeable
      * Stops the monitoring and closes the actor.
      * When returning from that call, ZMonitor will be no more active.
      */
+    @Impure
     public final void destroy()
     {
         agent.send(CLOSE);
@@ -242,6 +258,7 @@ public class ZMonitor implements Closeable
      * @param verbose true for monitor to be verbose, otherwise false.
      * @return this instance.
      */
+    @Impure
     public final ZMonitor verbose(boolean verbose)
     {
         if (started) {
@@ -259,6 +276,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to monitor.
      * @return this instance.
      */
+    @Impure
     public final ZMonitor add(Event... events)
     {
         if (started) {
@@ -280,6 +298,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to stop monitoring.
      * @return this instance.
      */
+    @Impure
     public final ZMonitor remove(Event... events)
     {
         if (started) {
@@ -300,6 +319,7 @@ public class ZMonitor implements Closeable
      * Gets the next event, blocking for it until available.
      * @return the next monitored event or null if closed.
      */
+    @Impure
     public final ZEvent nextEvent()
     {
         return nextEvent(true);
@@ -310,6 +330,7 @@ public class ZMonitor implements Closeable
      * @param wait true to block until next event is available, false to immediately return with null if there is no event.
      * @return the next event or null if there is currently none.
      */
+    @Impure
     public final ZEvent nextEvent(boolean wait)
     {
         if (!started) {
@@ -328,6 +349,7 @@ public class ZMonitor implements Closeable
      * @param timeout the time in milliseconds to wait for a message before returning null, -1 to block.
      * @return the next event or null if there is currently none after the specified timeout.
      */
+    @Impure
     public final ZEvent nextEvent(int timeout)
     {
         if (!started) {
@@ -355,6 +377,7 @@ public class ZMonitor implements Closeable
      * @param ctx the context relative to this actor. Not null.
      * @param socket the socket to monitor for events. Not null.
      */
+    @Impure
     public ZMonitor(ZContext ctx, Socket socket)
     {
         Objects.requireNonNull(ctx, "ZMonitor works only with a supplied context");
@@ -381,6 +404,7 @@ public class ZMonitor implements Closeable
         private int     events;  // the events to monitor
         private boolean verbose;
 
+        @Impure
         public MonitorActor(ZMQ.Socket socket)
         {
             assert (socket != null);
@@ -388,12 +412,14 @@ public class ZMonitor implements Closeable
             this.address = String.format("inproc://zmonitor-%s-%s", socket.hashCode(), UUID.randomUUID());
         }
 
+        @SideEffectFree
         @Override
         public String premiere(Socket pipe)
         {
             return "ZMonitor-" + monitored.toString();
         }
 
+        @Impure
         @Override
         public List<Socket> createSockets(ZContext ctx, Object... args)
         {
@@ -403,12 +429,14 @@ public class ZMonitor implements Closeable
             return Collections.singletonList(monitor);
         }
 
+        @Impure
         @Override
         public void start(Socket pipe, List<Socket> sockets, ZPoller poller)
         {
             pipe.send("STARTED");
         }
 
+        @Impure
         @Override
         public boolean stage(Socket socket, Socket pipe, ZPoller poller, int evts)
         {
@@ -436,6 +464,7 @@ public class ZMonitor implements Closeable
             return msg.send(pipe, true);
         }
 
+        @Impure
         @Override
         public boolean backstage(ZMQ.Socket pipe, ZPoller poller, int evts)
         {
@@ -463,6 +492,7 @@ public class ZMonitor implements Closeable
             }
         }
 
+        @Impure
         private boolean addEvents(Socket pipe)
         {
             final ZMsg msg = ZMsg.recvMsg(pipe);
@@ -480,6 +510,7 @@ public class ZMonitor implements Closeable
             return pipe.send(OK);
         }
 
+        @Impure
         private boolean removeEvents(Socket pipe)
         {
             final ZMsg msg = ZMsg.recvMsg(pipe);
@@ -497,6 +528,7 @@ public class ZMonitor implements Closeable
             return pipe.send(OK);
         }
 
+        @Impure
         private boolean start(ZPoller poller, Socket pipe)
         {
             boolean rc = true;
@@ -521,6 +553,7 @@ public class ZMonitor implements Closeable
             return false;
         }
 
+        @Impure
         private boolean close(ZPoller poller, Socket pipe)
         {
             boolean rc = poller.unregister(monitor);
@@ -538,6 +571,7 @@ public class ZMonitor implements Closeable
             return false;
         }
 
+        @Impure
         private void log(String action, boolean rc, String err)
         {
             if (verbose) {

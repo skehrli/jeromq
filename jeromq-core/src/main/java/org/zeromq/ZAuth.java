@@ -1,5 +1,9 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
@@ -29,6 +33,7 @@ import zmq.util.Objects;
  *  <br>
  * Based on <a href="http://github.com/zeromq/czmq/blob/master/src/zauth.c">zauth.c</a> in czmq
  */
+@InheritableMustCall("close")
 public class ZAuth implements Closeable
 {
     public interface Auth
@@ -39,6 +44,7 @@ public class ZAuth implements Closeable
          * @param verbose true if the actor is verbose.
          * @return true if correctly configured, otherwise false.
          */
+        @Impure
         boolean configure(ZMsg msg, boolean verbose);
 
         /**
@@ -47,6 +53,7 @@ public class ZAuth implements Closeable
          * @param verbose
          * @return true if the connection is authorized, false otherwise.
          */
+        @Impure
         boolean authorize(ZapRequest request, boolean verbose);
     }
 
@@ -56,6 +63,7 @@ public class ZAuth implements Closeable
         private File             passwordsFile;
         private long             passwordsModified;
 
+        @Impure
         @Override
         public boolean configure(ZMsg msg, boolean verbose)
         {
@@ -80,6 +88,7 @@ public class ZAuth implements Closeable
             return true;
         }
 
+        @Impure
         @Override
         public boolean authorize(ZapRequest request, boolean verbose)
         {
@@ -104,6 +113,7 @@ public class ZAuth implements Closeable
             }
         }
 
+        @Impure
         private void loadPasswords(boolean initial)
         {
             if (!initial) {
@@ -135,16 +145,19 @@ public class ZAuth implements Closeable
         private ZCertStore certStore = null;
         private boolean    allowAny;
 
+        @Impure
         public SimpleCurveAuth()
         {
             this(new ZCertStore.Hasher());
         }
 
+        @SideEffectFree
         public SimpleCurveAuth(ZCertStore.Fingerprinter fingerprinter)
         {
             this.fingerprinter = fingerprinter;
         }
 
+        @Impure
         @Override
         public boolean configure(ZMsg configuration, boolean verbose)
         {
@@ -166,6 +179,7 @@ public class ZAuth implements Closeable
             return true;
         }
 
+        @Impure
         @Override
         public boolean authorize(ZapRequest request, boolean verbose)
         {
@@ -201,12 +215,14 @@ public class ZAuth implements Closeable
 
     public static class SimpleNullAuth implements Auth
     {
+        @Pure
         @Override
         public boolean configure(ZMsg configuration, boolean verbose)
         {
             return true;
         }
 
+        @Pure
         @Override
         public boolean authorize(ZapRequest request, boolean verbose)
         {
@@ -227,12 +243,15 @@ public class ZAuth implements Closeable
         public final String    address;    // not part of the ZAP protocol, but handy information for user
         public final String    identity;   // not part of the ZAP protocol, but handy information for user
 
+        @SideEffectFree
+        @Impure
         private ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
                          ZMetadata metadata)
         {
             this(version, sequence, statusCode, statusText, userId, metadata, null, null);
         }
 
+        @SideEffectFree
         private ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
                          ZMetadata metadata, String address, String identity)
         {
@@ -247,6 +266,7 @@ public class ZAuth implements Closeable
             this.identity = identity;
         }
 
+        @Impure
         private ZMsg msg()
         {
             ZMsg msg = new ZMsg();
@@ -259,6 +279,7 @@ public class ZAuth implements Closeable
             return msg;
         }
 
+        @Pure
         @Override
         public String toString()
         {
@@ -269,16 +290,19 @@ public class ZAuth implements Closeable
                     + (metadata != null ? "metadata=" + metadata : "") + "]";
         }
 
+        @Impure
         private static ZapReply recv(ZAgent agent, boolean wait)
         {
             return received(agent.recv(wait));
         }
 
+        @Impure
         private static ZapReply recv(ZAgent agent, int timeout)
         {
             return received(agent.recv(timeout));
         }
 
+        @Impure
         private static ZapReply received(ZMsg msg)
         {
             if (msg == null) {
@@ -318,6 +342,7 @@ public class ZAuth implements Closeable
         public String       userId;    //  User-Id to return in the ZAP Response
         public ZMetadata    metadata;  // metadata to eventually return
 
+        @Impure
         private ZapRequest(Socket handler, ZMsg request)
         {
             //  Store handler socket so we can send a reply easily
@@ -363,6 +388,7 @@ public class ZAuth implements Closeable
             }
         }
 
+        @Impure
         private static ZapRequest recvRequest(Socket handler, boolean wait)
         {
             ZMsg request = ZMsg.recvMsg(handler, wait);
@@ -382,6 +408,7 @@ public class ZAuth implements Closeable
         /**
          * Send a zap reply to the handler socket
          */
+        @Impure
         private void reply(int statusCode, String statusText, Socket replies)
         {
             ZapReply reply = new ZapReply(ZAP_VERSION, sequence, statusCode, statusText, userId, metadata);
@@ -416,21 +443,25 @@ public class ZAuth implements Closeable
      * behavior), and all PLAIN and CURVE connections are denied.
      * @param ctx
      */
+    @Impure
     public ZAuth(ZContext ctx)
     {
         this(ctx, "ZAuth");
     }
 
+    @Impure
     public ZAuth(ZContext ctx, ZCertStore.Fingerprinter fingerprinter)
     {
         this(ctx, "ZAuth", curveVariant(fingerprinter));
     }
 
+    @Impure
     public ZAuth(ZContext ctx, String actorName)
     {
         this(ctx, actorName, makeSimpleAuths());
     }
 
+    @Impure
     private static Map<String, Auth> makeSimpleAuths()
     {
         Map<String, Auth> auths = new HashMap<>();
@@ -442,6 +473,7 @@ public class ZAuth implements Closeable
         return auths;
     }
 
+    @Impure
     private static Map<String, Auth> curveVariant(ZCertStore.Fingerprinter fingerprinter)
     {
         Map<String, Auth> auths = makeSimpleAuths();
@@ -449,6 +481,7 @@ public class ZAuth implements Closeable
         return auths;
     }
 
+    @Impure
     public ZAuth(final ZContext ctx, String actorName, Map<String, Auth> auths)
     {
         Objects.requireNonNull(ctx, "ZAuth works only with a provided ZContext");
@@ -468,11 +501,13 @@ public class ZAuth implements Closeable
      * Enable verbose tracing of commands and activity
      * @param verbose
      */
+    @Impure
     public ZAuth setVerbose(boolean verbose)
     {
         return verbose(verbose);
     }
 
+    @Impure
     public ZAuth verbose(boolean verbose)
     {
         return send(VERBOSE, String.format("%b", verbose));
@@ -486,6 +521,7 @@ public class ZAuth implements Closeable
      * non-whitelisted addresses are treated as blacklisted.
      * @param address
      */
+    @Impure
     public ZAuth allow(String address)
     {
         Objects.requireNonNull(address, "Address has to be supplied for allowance");
@@ -499,6 +535,7 @@ public class ZAuth implements Closeable
      * and a blacklist, only the whitelist takes effect.
      * @param address
      */
+    @Impure
     public ZAuth deny(String address)
     {
         Objects.requireNonNull(address, "Address has to be supplied for denial");
@@ -512,6 +549,7 @@ public class ZAuth implements Closeable
      * @param domain
      * @param filename
      */
+    @Impure
     public ZAuth configurePlain(String domain, String filename)
     {
         Objects.requireNonNull(domain, "Domain has to be supplied");
@@ -524,12 +562,14 @@ public class ZAuth implements Closeable
      *
      * @param location Can be ZAuth.CURVE_ALLOW_ANY or a directory with public-keys that will be accepted
      */
+    @Impure
     public ZAuth configureCurve(String location)
     {
         Objects.requireNonNull(location, "Location has to be supplied");
         return send(Mechanism.CURVE.name(), location);
     }
 
+    @Impure
     public ZAuth replies(boolean enable)
     {
         repliesEnabled = enable;
@@ -540,6 +580,7 @@ public class ZAuth implements Closeable
      * Retrieves the next ZAP reply.
      * @return the next reply or null if the actor is closed.
      */
+    @Impure
     public ZapReply nextReply()
     {
         return nextReply(true);
@@ -550,6 +591,7 @@ public class ZAuth implements Closeable
      * @param wait true to wait for the next reply, false to immediately return if there is no next reply.
      * @return the next reply or null if the actor is closed or if there is no next reply yet.
      */
+    @Impure
     public ZapReply nextReply(boolean wait)
     {
         if (!repliesEnabled) {
@@ -564,6 +606,7 @@ public class ZAuth implements Closeable
      * @param timeout the timeout in milliseconds to wait for a reply before giving up and returning null.
      * @return the next reply or null if the actor is closed or if there is no next reply after the elapsed timeout.
      */
+    @Impure
     public ZapReply nextReply(int timeout)
     {
         if (!repliesEnabled) {
@@ -576,6 +619,7 @@ public class ZAuth implements Closeable
     /**
      * Destructor.
      */
+    @Impure
     @Override
     public void close()
     {
@@ -585,6 +629,7 @@ public class ZAuth implements Closeable
     /**
      * Destructor.
      */
+    @Impure
     public void destroy()
     {
         send(TERMINATE);
@@ -593,6 +638,7 @@ public class ZAuth implements Closeable
         replies.close();
     }
 
+    @Impure
     protected ZAuth send(String command, String... datas)
     {
         ZMsg msg = new ZMsg();
@@ -627,6 +673,7 @@ public class ZAuth implements Closeable
         private Socket       replies;        // replies pipe
         private boolean      verbose;        // trace behavior
 
+        @Impure
         private AuthActor(String actorName, Map<String, Auth> auths)
         {
             assert (auths != null);
@@ -636,6 +683,7 @@ public class ZAuth implements Closeable
             this.repliesAddress = "inproc://zauth-replies-" + UUID.randomUUID();
         }
 
+        @Impure
         private ZAgent createAgent(ZContext ctx)
         {
             Socket pipe = ctx.createSocket(SocketType.PAIR);
@@ -644,12 +692,14 @@ public class ZAuth implements Closeable
             return new ZAgent.SimpleAgent(pipe, repliesAddress);
         }
 
+        @Pure
         @Override
         public String premiere(Socket pipe)
         {
             return actorName;
         }
 
+        @Impure
         @Override
         public List<Socket> createSockets(ZContext ctx, Object... args)
         {
@@ -663,6 +713,7 @@ public class ZAuth implements Closeable
             return Arrays.asList(handler, replies);
         }
 
+        @Impure
         @Override
         public void start(Socket pipe, List<Socket> sockets, ZPoller poller)
         {
@@ -686,6 +737,7 @@ public class ZAuth implements Closeable
             }
         }
 
+        @Impure
         @Override
         public boolean backstage(Socket pipe, ZPoller poller, int events)
         {
@@ -763,6 +815,7 @@ public class ZAuth implements Closeable
             return rc;
         }
 
+        @Impure
         @Override
         public boolean stage(Socket socket, Socket pipe, ZPoller poller, int events)
         {

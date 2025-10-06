@@ -1,5 +1,6 @@
 package org.zeromq.proto;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,26 +26,31 @@ public final class ZNeedle
 {
     private final ByteBuffer needle; //  Read/write pointer for serialization
 
+    @Impure
     public ZNeedle(ZFrame frame)
     {
         this(frame.getData());
     }
 
+    @Impure
     private ZNeedle(byte[] data)
     {
         needle = ByteBuffer.wrap(data);
     }
 
+    @Impure
     private void checkAvailable(int size)
     {
         Utils.checkArgument(needle.position() + size <= needle.limit(), () -> "Unable to handle " + size + " bytes");
     }
 
+    @Impure
     private void forward(int size)
     {
         needle.position(needle.position() + size);
     }
 
+    @Impure
     private <T> T get(BiFunction<ByteBuffer, Integer, T> getter, int size)
     {
         T value = getter.apply(needle, needle.position());
@@ -53,6 +59,7 @@ public final class ZNeedle
     }
 
     //  Put a 1-byte number to the frame
+    @Impure
     public void putNumber1(int value)
     {
         checkAvailable(1);
@@ -61,6 +68,7 @@ public final class ZNeedle
 
     //  Get a 1-byte number to the frame
     //  then make it unsigned
+    @Impure
     public int getNumber1()
     {
         checkAvailable(1);
@@ -70,6 +78,7 @@ public final class ZNeedle
     }
 
     //  Put a 2-byte number to the frame
+    @Impure
     public void putNumber2(int value)
     {
         checkAvailable(2);
@@ -77,6 +86,7 @@ public final class ZNeedle
     }
 
     //  Get a 2-byte number to the frame
+    @Impure
     public int getNumber2()
     {
         checkAvailable(2);
@@ -84,6 +94,7 @@ public final class ZNeedle
     }
 
     //  Put a 4-byte number to the frame
+    @Impure
     public void putNumber4(int value)
     {
         checkAvailable(4);
@@ -92,6 +103,7 @@ public final class ZNeedle
 
     //  Get a 4-byte number to the frame
     //  then make it unsigned
+    @Impure
     public int getNumber4()
     {
         checkAvailable(4);
@@ -99,6 +111,7 @@ public final class ZNeedle
     }
 
     //  Put a 8-byte number to the frame
+    @Impure
     public void putNumber8(long value)
     {
         checkAvailable(8);
@@ -106,6 +119,7 @@ public final class ZNeedle
     }
 
     //  Get a 8-byte number to the frame
+    @Impure
     public long getNumber8()
     {
         checkAvailable(8);
@@ -113,11 +127,13 @@ public final class ZNeedle
     }
 
     //  Put a block to the frame
+    @Impure
     public void putBlock(byte[] value, int size)
     {
         needle.put(value, 0, size);
     }
 
+    @Impure
     public byte[] getBlock(int size)
     {
         checkAvailable(size);
@@ -128,6 +144,7 @@ public final class ZNeedle
     }
 
     //  Put a string to the frame
+    @Impure
     public void putShortString(String value)
     {
         checkAvailable(value.length() + 1);
@@ -135,6 +152,7 @@ public final class ZNeedle
     }
 
     //  Get a string from the frame
+    @Impure
     public String getShortString()
     {
         String value = Wire.getShortString(needle, needle.position());
@@ -142,6 +160,7 @@ public final class ZNeedle
         return value;
     }
 
+    @Impure
     public void putLongString(String value)
     {
         checkAvailable(value.length() + 4);
@@ -149,6 +168,7 @@ public final class ZNeedle
     }
 
     //  Get a long string from the frame
+    @Impure
     public String getLongString()
     {
         String value = Wire.getLongString(needle, needle.position());
@@ -157,6 +177,7 @@ public final class ZNeedle
     }
 
     //  Put a string to the frame
+    @Impure
     public void putString(String value)
     {
         if (value.length() > Byte.MAX_VALUE * 2 + 1) {
@@ -168,12 +189,14 @@ public final class ZNeedle
     }
 
     //  Get a short string from the frame
+    @Impure
     public String getString()
     {
         return getShortString();
     }
 
     //  Put a collection of strings to the frame
+    @Impure
     public void putList(Collection<String> elements)
     {
         if (elements == null) {
@@ -188,6 +211,7 @@ public final class ZNeedle
         }
     }
 
+    @Impure
     public List<String> getList()
     {
         int size = getNumber1();
@@ -199,6 +223,7 @@ public final class ZNeedle
     }
 
     //  Put a map of strings to the frame
+    @Impure
     public void putMap(Map<String, String> map)
     {
         if (map == null) {
@@ -220,6 +245,7 @@ public final class ZNeedle
         }
     }
 
+    @Impure
     public Map<String, String> getMap()
     {
         int size = getNumber1();
@@ -232,6 +258,7 @@ public final class ZNeedle
         return map;
     }
 
+    @Impure
     @Override
     public String toString()
     {

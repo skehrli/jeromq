@@ -1,5 +1,8 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,9 +23,11 @@ class Mtrie
 
     public interface IMtrieHandler
     {
+        @Impure
         void invoke(Pipe pipe, byte[] data, int size, XPub arg);
     }
 
+    @SideEffectFree
     public Mtrie()
     {
         min = 0;
@@ -33,6 +38,7 @@ class Mtrie
         next = null;
     }
 
+    @Impure
     final boolean addOnTop(Pipe pipe)
     {
         assert (pipe != null);
@@ -41,6 +47,7 @@ class Mtrie
 
     //  Add key to the trie. Returns true if it's a new subscription
     //  rather than a duplicate.
+    @Impure
     public boolean add(Msg msg, Pipe pipe)
     {
         assert (msg != null);
@@ -48,6 +55,7 @@ class Mtrie
         return addHelper(msg, 1, msg.size() - 1, pipe);
     }
 
+    @Impure
     private boolean addHelper(Msg msg, int start, int size, Pipe pipe)
     {
         //  We are at the node corresponding to the prefix. We are done.
@@ -111,6 +119,8 @@ class Mtrie
         }
     }
 
+    @SideEffectFree
+    @Impure
     private Mtrie[] realloc(Mtrie[] table, int size, boolean ended)
     {
         return Utils.realloc(Mtrie.class, table, size, ended);
@@ -119,6 +129,7 @@ class Mtrie
     //  Remove all subscriptions for a specific peer from the trie.
     //  If there are no subscriptions left on some topics, invoke the
     //  supplied callback function.
+    @Impure
     public boolean rm(Pipe pipe, IMtrieHandler func, XPub pub)
     {
         assert (pipe != null);
@@ -126,6 +137,7 @@ class Mtrie
         return rmHelper(pipe, new byte[0], 0, 0, func, pub);
     }
 
+    @Impure
     private boolean rmHelper(Pipe pipe, byte[] buff, int buffsize, int maxBuffSize, IMtrieHandler func, XPub pub)
     {
         //  Remove the subscription from this node.
@@ -240,6 +252,7 @@ class Mtrie
 
     //  Remove specific subscription from the trie. Return true is it was
     //  actually removed rather than de-duplicated.
+    @Impure
     public boolean rm(Msg msg, Pipe pipe)
     {
         assert (msg != null);
@@ -247,6 +260,7 @@ class Mtrie
         return rmHelper(msg, 1, msg.size() - 1, pipe);
     }
 
+    @Impure
     private boolean rmHelper(Msg msg, int start, int size, Pipe pipe)
     {
         if (size == 0) {
@@ -337,6 +351,7 @@ class Mtrie
     }
 
     //  Signal all the matching pipes.
+    @Impure
     public void match(ByteBuffer data, int size, IMtrieHandler func, XPub pub)
     {
         assert (data != null);
@@ -388,6 +403,7 @@ class Mtrie
         }
     }
 
+    @Pure
     private boolean isRedundant()
     {
         return pipes == null && liveNodes == 0;

@@ -1,5 +1,9 @@
 package zmq.io.net;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.Locale;
@@ -26,6 +30,7 @@ public enum NetProtocol
     inproc(false, false),
     tcp(false, false)
     {
+        @Impure
         @Override
         public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
         {
@@ -34,6 +39,7 @@ public enum NetProtocol
     },
     udp(true, true)
     {
+        @Impure
         @Override
         public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
         {
@@ -49,6 +55,7 @@ public enum NetProtocol
     wss(true, true),
     ipc(false, false)
     {
+        @Impure
         @Override
         public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
         {
@@ -57,6 +64,7 @@ public enum NetProtocol
     },
     tipc(false, false)
     {
+        @Impure
         @Override
         public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
         {
@@ -72,6 +80,7 @@ public enum NetProtocol
      * @throws IllegalArgumentException if the protocol name can be matched to an actual supported protocol
      * @return {@link NetProtocol} resolved by name
      */
+    @Impure
     public static NetProtocol getProtocol(String protocol)
     {
         try {
@@ -88,6 +97,7 @@ public enum NetProtocol
      * the more generic to the more specific in case of complex hierarchy.
      * @param cl The class loader used to resolve the {@link NetworkProtocolProvider}.
      */
+    @Impure
     @SuppressWarnings("rawtypes, unchecked")
     public static void preloadWithClassLoader(ClassLoader cl)
     {
@@ -104,6 +114,7 @@ public enum NetProtocol
                      });
     }
 
+    @Impure
     @SuppressWarnings("rawtypes")
     private static NetworkProtocolProvider resolveProtocol(NetProtocol proto)
     {
@@ -122,6 +133,7 @@ public enum NetProtocol
      * @param provider The {@link NetworkProtocolProvider} to be installed.
      * @throws IllegalArgumentException if the provider is not usable for this protocol
      */
+    @Impure
     public static <S extends SocketAddress> void install(NetProtocol protocol, NetworkProtocolProvider<S> provider)
     {
         if (provider.isValid() && provider.handleProtocol(protocol)) {
@@ -132,7 +144,9 @@ public enum NetProtocol
         }
     }
 
-    public static <S extends SocketAddress> NetProtocol findByAddress(S socketAddress)
+    @SideEffectFree
+    @Impure
+    public static <S extends SocketAddress> NetProtocol findByAddress(@Owning S socketAddress)
     {
         for (Map.Entry<NetProtocol, NetworkProtocolProvider<? extends SocketAddress>> e : providers.entrySet()) {
             if (e.getValue().handleAdress(socketAddress)) {
@@ -146,6 +160,7 @@ public enum NetProtocol
     public final boolean  isMulticast;
     private final Set<Integer> compatibles;
 
+    @Impure
     NetProtocol(boolean subscribe2all, boolean isMulticast, Sockets... compatibles)
     {
         this.compatibles = Arrays.stream(compatibles).map(Sockets::ordinal).collect(Collectors.toSet());
@@ -153,6 +168,7 @@ public enum NetProtocol
         this.isMulticast = isMulticast;
     }
 
+    @Impure
     public boolean isValid()
     {
         return Optional.ofNullable(providers.computeIfAbsent(this, NetProtocol::resolveProtocol))
@@ -160,27 +176,32 @@ public enum NetProtocol
                        .orElse(false);
     }
 
+    @Pure
     public final boolean compatible(int type)
     {
         return compatibles.isEmpty() || compatibles.contains(type);
     }
 
+    @Impure
     public Listener getListener(IOThread ioThread, SocketBase socket, Options options)
     {
         return resolve().getListener(ioThread, socket, options);
     }
 
+    @Impure
     public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
     {
         // TODO V4 init address for pgm & epgm
     }
 
+    @Impure
     @SuppressWarnings("unchecked")
     public <S extends SocketAddress> IZAddress<S> zresolve(String addr, boolean ipv6)
     {
         return (IZAddress<S>) resolve().zresolve(addr, ipv6);
     }
 
+    @Impure
     @SuppressWarnings("unchecked")
     public <S extends SocketAddress> void startConnecting(Options options, IOThread ioThread, SessionBase session, Address<S> addr,
                                          boolean delayedStart, Consumer<Own> launchChild, BiConsumer<SessionBase, IEngine> sendAttach)
@@ -188,6 +209,7 @@ public enum NetProtocol
         resolve().startConnecting(options, ioThread, session, (Address<SocketAddress>) addr, delayedStart, launchChild, sendAttach);
     }
 
+    @Impure
     @SuppressWarnings("unchecked")
     private <S extends SocketAddress> NetworkProtocolProvider<S> resolve()
     {
@@ -198,11 +220,13 @@ public enum NetProtocol
         return protocolProvider;
     }
 
+    @Impure
     public String formatSocketAddress(SocketAddress socketAddress)
     {
         return resolve().formatSocketAddress(socketAddress);
     }
 
+    @Impure
     public boolean wantsIOThread()
     {
         return resolve().wantsIOThread();

@@ -1,5 +1,8 @@
 package org.zeromq;
 
+import org.checkerframework.framework.qual.EnsuresQualifier;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -21,6 +24,8 @@ class ManagedContext
     private final Ctx             ctx;
     private final Set<SocketBase> sockets;
 
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @Impure
     private ManagedContext()
     {
         this.ctx = ZMQ.init(ZMQ.ZMQ_IO_THREADS_DFLT);
@@ -28,11 +33,13 @@ class ManagedContext
         this.sockets = new HashSet<>();
     }
 
+    @Pure
     static ManagedContext getInstance()
     {
         return ContextHolder.INSTANCE;
     }
 
+    @Impure
     SocketBase createSocket(int type)
     {
         final SocketBase base = ctx.createSocket(type);
@@ -46,6 +53,7 @@ class ManagedContext
         return base;
     }
 
+    @Impure
     void destroy(SocketBase socketBase)
     {
         socketBase.setSocketOpt(ZMQ.ZMQ_LINGER, 0);
@@ -62,6 +70,7 @@ class ManagedContext
     /*
      * This should only be called when SIGINT is received
      */
+    @Impure
     private void close()
     {
         lock.lock();

@@ -1,5 +1,10 @@
 package org.zeromq;
 
+import org.checkerframework.framework.qual.EnsuresQualifier;
+import org.checkerframework.checker.collectionownership.qual.PolyOwningCollection;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -55,6 +60,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     /**
      * Class Constructor
      */
+    @SideEffectFree
     public ZMsg()
     {
     }
@@ -63,6 +69,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * Destructor.
      * Explicitly destroys all ZFrames contains in the ZMsg
      */
+    @Impure
     public void destroy()
     {
         for (ZFrame f : frames) {
@@ -74,6 +81,8 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     /**
      * @return total number of bytes contained in all ZFrames in this ZMsg
      */
+    @Pure
+    @Impure
     public long contentSize()
     {
         long size = 0;
@@ -88,6 +97,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @param str
      *              String to add to list
      */
+    @Impure
     public ZMsg addString(String str)
     {
         frames.add(new ZFrame(str));
@@ -100,6 +110,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          The duplicated ZMsg object, else null if this ZMsg contains an empty frame set
      */
+    @Impure
     public ZMsg duplicate()
     {
         if (frames.isEmpty()) {
@@ -119,6 +130,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * Message takes ownership of frame, will destroy it when message is sent.
      * @param frame
      */
+    @Impure
     public ZMsg wrap(ZFrame frame)
     {
         if (frame != null) {
@@ -135,6 +147,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          Unwrapped frame
      */
+    @Impure
     public ZFrame unwrap()
     {
         if (size() == 0) {
@@ -156,6 +169,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      *              0MQ socket to send ZMsg on.
      * @return true if send is success, false otherwise
      */
+    @Impure
     public boolean send(Socket socket)
     {
         return send(socket, true);
@@ -168,6 +182,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      *              0MQ socket to send ZMsg on.
      * @return true if send is success, false otherwise
      */
+    @Impure
     public boolean send(Socket socket, boolean destroy)
     {
         if (socket == null) {
@@ -201,6 +216,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          ZMsg object, null if interrupted
      */
+    @Impure
     public static ZMsg recvMsg(Socket socket)
     {
         return recvMsg(socket, 0);
@@ -214,6 +230,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          ZMsg object, null if interrupted
      */
+    @Impure
     public static ZMsg recvMsg(Socket socket, boolean wait)
     {
         return recvMsg(socket, wait ? 0 : ZMQ.DONTWAIT);
@@ -227,6 +244,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          ZMsg object, null if interrupted
      */
+    @Impure
     public static ZMsg recvMsg(Socket socket, int flag)
     {
         if (socket == null) {
@@ -260,6 +278,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @param handler handler to handle incoming message
      * @param exceptionHandler handler to handle exceptions
      */
+    @Impure
     @Draft
     public static void recvMsg(ZMQ.Socket socket, int flags,
                                Consumer<ZMsg> handler,
@@ -281,6 +300,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @param flags see ZMQ constants
      * @param handler handler to handle incoming message
      */
+    @Impure
     @Draft
     public static void recvMsg(ZMQ.Socket socket, int flags, Consumer<ZMsg> handler)
     {
@@ -303,6 +323,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          True if saved OK, else false
      */
+    @Impure
     public static boolean save(ZMsg msg, DataOutputStream file)
     {
         if (msg == null) {
@@ -335,6 +356,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *          ZMsg object
      */
+    @Impure
     public static ZMsg load(DataInputStream file)
     {
         if (file == null) {
@@ -368,6 +390,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return
      *      ZMsg object
      */
+    @Impure
     public static ZMsg newStringMsg(String... strings)
     {
         ZMsg msg = new ZMsg();
@@ -377,6 +400,8 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return msg;
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.NotOwningCollection.class)
+    @Impure
     @Override
     public boolean equals(Object o)
     {
@@ -401,6 +426,8 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return !(e1.hasNext() || e2.hasNext());
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.NotOwningCollection.class)
+    @Pure
     @Override
     public int hashCode()
     {
@@ -420,6 +447,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * Dump the message in human readable format. This should only be used
      * for debugging and tracing, inefficient in handling large messages.
      **/
+    @Impure
     public ZMsg dump(Appendable out)
     {
         try {
@@ -438,6 +466,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return this;
     }
 
+    @Impure
     public ZMsg dump()
     {
         dump(System.out);
@@ -446,24 +475,28 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
 
     // ********* Convenience Deque methods for common data types *** //
 
+    @Impure
     public ZMsg addFirst(String stringValue)
     {
         addFirst(new ZFrame(stringValue));
         return this;
     }
 
+    @Impure
     public ZMsg addFirst(byte[] data)
     {
         addFirst(new ZFrame(data));
         return this;
     }
 
+    @Impure
     public ZMsg addLast(String stringValue)
     {
         addLast(new ZFrame(stringValue));
         return this;
     }
 
+    @Impure
     public ZMsg addLast(byte[] data)
     {
         addLast(new ZFrame(data));
@@ -472,23 +505,27 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
 
     // ********* Convenience Queue methods for common data types *** //
 
+    @Impure
     public ZMsg push(String str)
     {
         push(new ZFrame(str));
         return this;
     }
 
+    @Impure
     public ZMsg push(byte[] data)
     {
         push(new ZFrame(data));
         return this;
     }
 
+    @Impure
     public boolean add(String stringValue)
     {
         return add(new ZFrame(stringValue));
     }
 
+    @Impure
     public boolean add(byte[] data)
     {
         return add(new ZFrame(data));
@@ -500,6 +537,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @param stringValue the value to add
      * @return this
      */
+    @Impure
     public ZMsg append(String stringValue)
     {
         add(stringValue);
@@ -512,6 +550,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @param data the value to add
      * @return this
      */
+    @Impure
     public ZMsg append(byte[] data)
     {
         add(data);
@@ -519,163 +558,192 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     }
 
     // ********* Implement Iterable Interface *************** //
+    @SideEffectFree
     @Override
-    public Iterator<ZFrame> iterator()
+    public Iterator<ZFrame> iterator(@PolyOwningCollection ZMsg this)
     {
         return frames.iterator();
     }
 
     // ********* Implement Deque Interface ****************** //
+    @Impure
     @Override
     public boolean addAll(Collection<? extends ZFrame> arg0)
     {
         return frames.addAll(arg0);
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @Impure
     @Override
     public void clear()
     {
         frames.clear();
     }
 
+    @Pure
     @Override
     public boolean containsAll(Collection<?> arg0)
     {
         return frames.containsAll(arg0);
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.NotOwningCollection.class)
+    @Pure
     @Override
     public boolean isEmpty()
     {
         return frames.isEmpty();
     }
 
+    @Impure
     @Override
     public boolean removeAll(Collection<?> arg0)
     {
         return frames.removeAll(arg0);
     }
 
+    @Impure
     @Override
     public boolean retainAll(Collection<?> arg0)
     {
         return frames.retainAll(arg0);
     }
 
+    @SideEffectFree
     @Override
     public Object[] toArray()
     {
         return frames.toArray();
     }
 
+    @SideEffectFree
     @Override
     public <T> T[] toArray(T[] arg0)
     {
         return frames.toArray(arg0);
     }
 
+    @Impure
     @Override
     public boolean add(ZFrame e)
     {
         return frames.add(e);
     }
 
+    @Impure
     @Override
     public void addFirst(ZFrame e)
     {
         frames.addFirst(e);
     }
 
+    @Impure
     @Override
     public void addLast(ZFrame e)
     {
         frames.addLast(e);
     }
 
+    @Pure
     @Override
     public boolean contains(Object o)
     {
         return frames.contains(o);
     }
 
+    @Impure
     @Override
     public Iterator<ZFrame> descendingIterator()
     {
         return frames.descendingIterator();
     }
 
+    @Impure
     @Override
     public ZFrame element()
     {
         return frames.element();
     }
 
+    @Pure
     @Override
     public ZFrame getFirst()
     {
         return frames.peekFirst();
     }
 
+    @Pure
     @Override
     public ZFrame getLast()
     {
         return frames.peekLast();
     }
 
+    @Impure
     @Override
     public boolean offer(ZFrame e)
     {
         return frames.offer(e);
     }
 
+    @Impure
     @Override
     public boolean offerFirst(ZFrame e)
     {
         return frames.offerFirst(e);
     }
 
+    @Impure
     @Override
     public boolean offerLast(ZFrame e)
     {
         return frames.offerLast(e);
     }
 
+    @Pure
     @Override
     public ZFrame peek()
     {
         return frames.peek();
     }
 
+    @Pure
     @Override
     public ZFrame peekFirst()
     {
         return frames.peekFirst();
     }
 
+    @Pure
     @Override
     public ZFrame peekLast()
     {
         return frames.peekLast();
     }
 
+    @Impure
     @Override
     public ZFrame poll()
     {
         return frames.poll();
     }
 
+    @Impure
     @Override
     public ZFrame pollFirst()
     {
         return frames.pollFirst();
     }
 
+    @Impure
     @Override
     public ZFrame pollLast()
     {
         return frames.pollLast();
     }
 
+    @Impure
     @Override
     public ZFrame pop()
     {
@@ -687,6 +755,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      *
      * @return toString version of pop'ed frame, or null if no frame exists.
      */
+    @Impure
     public String popString()
     {
         ZFrame frame = pop();
@@ -697,54 +766,64 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return frame.toString();
     }
 
+    @Impure
     @Override
     public void push(ZFrame e)
     {
         frames.push(e);
     }
 
+    @Impure
     @Override
     public ZFrame remove()
     {
         return frames.remove();
     }
 
+    @Impure
     @Override
     public boolean remove(Object o)
     {
         return frames.remove(o);
     }
 
+    @Impure
     @Override
     public ZFrame removeFirst()
     {
         return frames.pollFirst();
     }
 
+    @Impure
     @Override
     public boolean removeFirstOccurrence(Object o)
     {
         return frames.removeFirstOccurrence(o);
     }
 
+    @Impure
     @Override
     public ZFrame removeLast()
     {
         return frames.pollLast();
     }
 
+    @Impure
     @Override
     public boolean removeLastOccurrence(Object o)
     {
         return frames.removeLastOccurrence(o);
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.NotOwningCollection.class)
+    @Pure
     @Override
     public int size()
     {
         return frames.size();
     }
 
+    @Impure
     public ZMsg append(ZMsg msg)
     {
         if (msg == null) {
@@ -766,6 +845,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      *
      * @return toString version of ZMsg object
      */
+    @Impure
     @Override
     public String toString()
     {

@@ -1,5 +1,6 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Msg;
 import zmq.Options;
 import zmq.SocketBase;
@@ -9,12 +10,14 @@ public class HelloMsgSession extends SessionBase
 {
     boolean newPipe;
 
+    @Impure
     public HelloMsgSession(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
     {
         super(ioThread, connect, socket, options, addr);
         newPipe = true;
     }
 
+    @Impure
     @Override
     protected Msg pullMsg()
     {
@@ -26,6 +29,7 @@ public class HelloMsgSession extends SessionBase
         return super.pullMsg();
     }
 
+    @Impure
     @Override
     protected void reset()
     {

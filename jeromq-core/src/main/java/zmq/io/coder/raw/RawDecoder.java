@@ -1,5 +1,8 @@
 package zmq.io.coder.raw;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -13,12 +16,14 @@ public class RawDecoder implements IDecoder
 
     protected Msg inProgress;
 
+    @Impure
     public RawDecoder(int bufsize)
     {
         buffer = ByteBuffer.allocateDirect(bufsize);
         inProgress = new Msg();
     }
 
+    @Impure
     @Override
     public ByteBuffer getBuffer()
     {
@@ -26,6 +31,7 @@ public class RawDecoder implements IDecoder
         return buffer;
     }
 
+    @Impure
     @Override
     public Step.Result decode(ByteBuffer buffer, int size, ValueReference<Integer> processed)
     {
@@ -36,12 +42,14 @@ public class RawDecoder implements IDecoder
         return Step.Result.DECODED;
     }
 
+    @Pure
     @Override
     public Msg msg()
     {
         return inProgress;
     }
 
+    @SideEffectFree
     @Override
     public void destroy()
     {

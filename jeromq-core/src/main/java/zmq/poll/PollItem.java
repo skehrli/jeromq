@@ -1,5 +1,8 @@
 package zmq.poll;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
@@ -14,16 +17,19 @@ public class PollItem
     private final int               interest;
     private int                     ready;
 
+    @Impure
     public PollItem(SocketBase socket, int ops)
     {
         this(socket, null, ops);
     }
 
+    @Impure
     public PollItem(SelectableChannel channel, int ops)
     {
         this(null, channel, ops);
     }
 
+    @Impure
     private PollItem(SocketBase socket, SelectableChannel channel, int ops)
     {
         this.socket = socket;
@@ -32,6 +38,7 @@ public class PollItem
         this.interest = init(ops);
     }
 
+    @Impure
     private int init(int ops)
     {
         int interest = 0;
@@ -50,31 +57,39 @@ public class PollItem
         return interest;
     }
 
+    @Pure
     public boolean isReadable()
     {
         return (ready & ZMQ.ZMQ_POLLIN) > 0;
     }
 
+    @Pure
     public boolean isWritable()
     {
         return (ready & ZMQ.ZMQ_POLLOUT) > 0;
     }
 
+    @Pure
     public boolean isError()
     {
         return (ready & ZMQ.ZMQ_POLLERR) > 0;
     }
 
+    @Pure
     public SocketBase getSocket()
     {
         return socket;
     }
 
+    @NotOwning
+    @Pure
     public SelectableChannel getRawSocket()
     {
         return channel;
     }
 
+    @NotOwning
+    @Impure
     public SelectableChannel getChannel()
     {
         if (socket != null) {
@@ -89,27 +104,32 @@ public class PollItem
         }
     }
 
+    @Pure
     public int interestOps()
     {
         return interest;
     }
 
+    @Pure
     public int zinterestOps()
     {
         return zinterest;
     }
 
+    @Pure
     public boolean hasEvent(int events)
     {
         return (zinterest & events) > 0;
     }
 
+    @Impure
     public int interestOps(int ops)
     {
         init(ops);
         return interest;
     }
 
+    @Impure
     public int readyOps(SelectionKey key, int nevents)
     {
         ready = 0;
@@ -146,6 +166,7 @@ public class PollItem
         return ready;
     }
 
+    @Pure
     public int readyOps()
     {
         return ready;

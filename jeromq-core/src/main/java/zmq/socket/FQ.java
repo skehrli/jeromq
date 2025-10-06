@@ -1,5 +1,8 @@
 package zmq.socket;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +41,7 @@ public class FQ
     //  Holds credential after the last_acive_pipe has terminated.
     private Blob savedCredential;
 
+    @SideEffectFree
     public FQ()
     {
         active = 0;
@@ -47,6 +51,7 @@ public class FQ
         pipes = new ArrayList<>();
     }
 
+    @Impure
     public void attach(Pipe pipe)
     {
         pipes.add(pipe);
@@ -54,6 +59,7 @@ public class FQ
         active++;
     }
 
+    @Impure
     public void terminated(Pipe pipe)
     {
         final int index = pipes.indexOf(pipe);
@@ -75,6 +81,7 @@ public class FQ
         }
     }
 
+    @Impure
     public void activated(Pipe pipe)
     {
         //  Move the pipe to the list of active pipes.
@@ -82,11 +89,13 @@ public class FQ
         active++;
     }
 
+    @Impure
     public Msg recv(Errno errno)
     {
         return recvPipe(errno, null);
     }
 
+    @Impure
     public Msg recvPipe(Errno errno, ValueReference<Pipe> pipe)
     {
         //  Round-robin over the pipes to get the next message.
@@ -131,6 +140,7 @@ public class FQ
         return null;
     }
 
+    @Impure
     public boolean hasIn()
     {
         //  There are subsequent parts of the partly-read message available.
@@ -158,6 +168,8 @@ public class FQ
         return false;
     }
 
+    @Pure
+    @Impure
     public Blob getCredential()
     {
         return lastIn != null ? lastIn.getCredential() : savedCredential;

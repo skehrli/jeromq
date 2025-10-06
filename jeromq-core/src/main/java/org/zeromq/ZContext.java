@@ -1,5 +1,13 @@
 package org.zeromq;
 
+import org.checkerframework.framework.qual.EnsuresQualifier;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.channels.Selector;
@@ -25,11 +33,13 @@ import zmq.util.function.BiFunction;
  *
  */
 
+@InheritableMustCall("close")
 public class ZContext implements Closeable
 {
     /**
      * Reference to underlying Context object
      */
+    @Owning
     private final Context context;
 
     /**
@@ -81,16 +91,25 @@ public class ZContext implements Closeable
     /**
      * Class Constructor
      */
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Impure
     public ZContext()
     {
         this(1);
     }
 
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Impure
     public ZContext(int ioThreads)
     {
         this(null, ioThreads);
     }
 
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Impure
     private ZContext(ZContext parent, int ioThreads)
     {
         if (parent == null) {
@@ -117,6 +136,8 @@ public class ZContext implements Closeable
     /**
      * Destructor.  Call this to gracefully terminate context and close any managed 0MQ sockets
      */
+    @EnsuresCalledMethods(value="this.context", methods="close")
+    @Impure
     public void destroy()
     {
         for (Socket socket : sockets) {
@@ -152,6 +173,7 @@ public class ZContext implements Closeable
      * @return
      *          Newly created Socket object
      */
+    @Impure
     public Socket createSocket(SocketType type)
     {
         // Create and register socket
@@ -170,6 +192,7 @@ public class ZContext implements Closeable
      * @return
      *          Newly created Socket object
      */
+    @Impure
     @Deprecated
     public Socket createSocket(int type)
     {
@@ -185,6 +208,7 @@ public class ZContext implements Closeable
      * @deprecated Not to be used any more. {@link org.zeromq.ZMQ.Socket} handle
      *             the close itself. It also override linger settings.
      */
+    @Impure
     @Deprecated
     public void destroySocket(Socket s)
     {
@@ -206,6 +230,7 @@ public class ZContext implements Closeable
      * this context will call it on termination.
      * @param s {@link org.zeromq.ZMQ.Socket} object to destroy
      */
+    @Impure
     void closeSocket(Socket s)
     {
         if (s == null) {
@@ -225,6 +250,7 @@ public class ZContext implements Closeable
      * @return a newly created selector.
      * @deprecated this was exposed by mistake.
      */
+    @Impure
     @Deprecated
     public Selector createSelector()
     {
@@ -236,6 +262,7 @@ public class ZContext implements Closeable
      *
      * @return a newly created selector.
      */
+    @Impure
     Selector selector()
     {
         Selector selector = context.selector();
@@ -250,6 +277,8 @@ public class ZContext implements Closeable
      * @param selector the selector to close. It needs to have been created by {@link #createSelector()}.
      * @deprecated {@link #createSelector()} was exposed by mistake. while waiting for the API to disappear, this method is provided to allow releasing resources.
      */
+    @EnsuresCalledMethods(value="this.context", methods="close")
+    @Impure
     @Deprecated
     @Draft
     public void closeSelector(Selector selector)
@@ -259,6 +288,7 @@ public class ZContext implements Closeable
         }
     }
 
+    @Impure
     public Poller createPoller(int size)
     {
         return new Poller(context, size);
@@ -272,6 +302,7 @@ public class ZContext implements Closeable
      * @return  New ZContext
      * @deprecated use the instance method directly
      */
+    @Impure
     @Deprecated
     public static ZContext shadow(ZContext ctx)
     {
@@ -284,6 +315,9 @@ public class ZContext implements Closeable
      * of managed sockets, io thread count etc.
      * @return  New ZContext
      */
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Impure
     public ZContext shadow()
     {
         if (! main) {
@@ -305,6 +339,7 @@ public class ZContext implements Closeable
      * @param args forked runnable args
      * @return pipe or null if there was an error
      */
+    @Impure
     public Socket fork(ZThread.IAttachedRunnable runnable, Object... args)
     {
         return ZThread.fork(this, runnable, args);
@@ -313,6 +348,7 @@ public class ZContext implements Closeable
     /**
      * @return the ioThreads
      */
+    @Pure
     public int getIoThreads()
     {
         return ioThreads;
@@ -324,6 +360,7 @@ public class ZContext implements Closeable
      * @param ioThreads the number of ioThreads to set
      * @deprecated This value should not be changed after the context is initialized.
      */
+    @SideEffectFree
     @Deprecated
     public void setIoThreads(int ioThreads)
     {
@@ -332,6 +369,7 @@ public class ZContext implements Closeable
     /**
      * @return the default linger for sockets.
      */
+    @Pure
     public int getLinger()
     {
         return linger;
@@ -340,6 +378,7 @@ public class ZContext implements Closeable
     /**
      * @param linger the linger that will inherited by created socket.
      */
+    @Impure
     public void setLinger(int linger)
     {
         this.linger = linger;
@@ -351,6 +390,7 @@ public class ZContext implements Closeable
      * The default, no matter the underlying ZeroMQ version, is 1,000.
      * @param rcvhwm the rcvhwm
      */
+    @Impure
     public void setRcvHWM(int rcvhwm)
     {
         this.rcvhwm = rcvhwm;
@@ -362,6 +402,7 @@ public class ZContext implements Closeable
      * The default, no matter the underlying ZeroMQ version, is 1,000.
      * @param sndhwm the sndhwm
      */
+    @Impure
     public void setSndHWM(int sndhwm)
     {
         this.sndhwm = sndhwm;
@@ -373,6 +414,7 @@ public class ZContext implements Closeable
      * @param handler The object to use as this thread's uncaught exception handler. If null then this thread has no explicit handler.
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @Impure
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler)
     {
         context.setUncaughtExceptionHandler(handler);
@@ -381,6 +423,8 @@ public class ZContext implements Closeable
     /**
      * @return The handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.
      */
+    @Pure
+    @Impure
     public UncaughtExceptionHandler getUncaughtExceptionHandler()
     {
         return context.getUncaughtExceptionHandler();
@@ -393,6 +437,7 @@ public class ZContext implements Closeable
      * @param handler The object to use as this thread's handler for recoverable exceptions notifications.
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @Impure
     public void setNotificationExceptionHandler(UncaughtExceptionHandler handler)
     {
         context.setNotificationExceptionHandler(handler);
@@ -401,6 +446,8 @@ public class ZContext implements Closeable
     /**
      * @return The handler invoked when a non-fatal exceptions is thrown in zmq.poll.Poller#run()
      */
+    @Pure
+    @Impure
     public UncaughtExceptionHandler getNotificationExceptionHandler()
     {
         return context.getNotificationExceptionHandler();
@@ -414,6 +461,7 @@ public class ZContext implements Closeable
      * @param threadFactory the thread factory used by {@link zmq.poll.Poller}
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @Impure
     public void setThreadFactor(BiFunction<Runnable, String, Thread> threadFactory)
     {
         context.setThreadFactor(threadFactory);
@@ -422,6 +470,8 @@ public class ZContext implements Closeable
     /**
      * @return the current thread factory
      */
+    @Pure
+    @Impure
     public BiFunction<Runnable, String, Thread> getThreadFactory()
     {
         return context.getThreadFactory();
@@ -430,6 +480,7 @@ public class ZContext implements Closeable
     /**
      * @return the main
      */
+    @Pure
     public boolean isMain()
     {
         return main;
@@ -438,6 +489,7 @@ public class ZContext implements Closeable
     /**
      * @return true if no shadow context, no sockets and no selectors are alive.
      */
+    @Pure
     public boolean isEmpty()
     {
         return shadows.isEmpty() && sockets.isEmpty() && selectors.isEmpty();
@@ -447,6 +499,7 @@ public class ZContext implements Closeable
      * @param main whether or not the context is being set to main
      * @deprecated This value should not be changed after the context is initialized.
      */
+    @SideEffectFree
     @Deprecated
     public void setMain(boolean main)
     {
@@ -455,6 +508,8 @@ public class ZContext implements Closeable
     /**
      * @return the context
      */
+    @NotOwning
+    @Pure
     public Context getContext()
     {
         return context;
@@ -464,6 +519,7 @@ public class ZContext implements Closeable
      * @param ctx sets the underlying zmq.Context associated with this ZContext wrapper object
      * @deprecated This value should not be changed after the ZContext is initialized.
      */
+    @SideEffectFree
     @Deprecated
     public void setContext(Context ctx)
     {
@@ -473,17 +529,20 @@ public class ZContext implements Closeable
      * Return a copy of the list of currently open sockets. Order is not meaningful.
      * @return the sockets
      */
+    @SideEffectFree
     public List<Socket> getSockets()
     {
         return new ArrayList<>(sockets);
     }
 
+    @Impure
     @Override
     public void close()
     {
         destroy();
     }
 
+    @Impure
     public boolean isClosed()
     {
         return context.isClosed();

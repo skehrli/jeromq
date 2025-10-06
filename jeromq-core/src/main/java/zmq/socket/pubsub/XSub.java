@@ -1,5 +1,7 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -14,6 +16,7 @@ public class XSub extends SocketBase
 {
     private final class SendSubscription implements ITrieHandler
     {
+        @Impure
         @Override
         public void added(byte[] data, int size, Pipe pipe)
         {
@@ -41,6 +44,7 @@ public class XSub extends SocketBase
 
     private final ITrieHandler sendSubscription = new SendSubscription();
 
+    @Impure
     public XSub(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -60,6 +64,7 @@ public class XSub extends SocketBase
         message = new Msg();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -72,18 +77,21 @@ public class XSub extends SocketBase
         pipe.flush();
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         dist.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -91,6 +99,7 @@ public class XSub extends SocketBase
         dist.terminated(pipe);
     }
 
+    @Impure
     @Override
     protected void xhiccuped(Pipe pipe)
     {
@@ -99,6 +108,7 @@ public class XSub extends SocketBase
         pipe.flush();
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -126,6 +136,7 @@ public class XSub extends SocketBase
         return true;
     }
 
+    @Pure
     @Override
     protected boolean xhasOut()
     {
@@ -133,6 +144,7 @@ public class XSub extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -176,6 +188,7 @@ public class XSub extends SocketBase
         }
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
@@ -218,17 +231,21 @@ public class XSub extends SocketBase
         }
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     private boolean match(Msg msg)
     {
         return subscriptions.check(msg.buf());
     }
 
+    @Impure
     private boolean sendSubscription(byte[] data, int size, Pipe pipe)
     {
         //  Create the subscription message.

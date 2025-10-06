@@ -1,5 +1,7 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -45,21 +47,25 @@ public class ZCert
     private final String    secretTxt;                  //  Secret key in Z85 text
     private final ZMetadata metadata = new ZMetadata(); //  Certificate metadata
 
+    @Impure
     public ZCert()
     {
         this(ZMQ.Curve.generateKeyPair());
     }
 
+    @Impure
     public ZCert(String publicKey)
     {
         this(publicKey, null);
     }
 
+    @Impure
     public ZCert(KeyPair keypair)
     {
         this(keypair.publicKey, keypair.secretKey);
     }
 
+    @Impure
     public ZCert(byte[] publicKey, byte[] secretKey)
     {
         Utils.checkArgument(publicKey != null, "Public key has to be provided for a ZCert");
@@ -80,6 +86,7 @@ public class ZCert
         }
     }
 
+    @Impure
     public ZCert(String publicKey, String secretKey)
     {
         Utils.checkArgument(publicKey != null, "Public key has to be provided for a ZCert");
@@ -100,57 +107,69 @@ public class ZCert
         }
     }
 
+    @Impure
     private void assertKey(int length, int expected, String flavour)
     {
         Utils.checkArgument(length == expected, flavour + " key shall have a size of " + expected);
     }
 
+    @Pure
     public byte[] getPublicKey()
     {
         return publicKey;
     }
 
+    @Pure
     public byte[] getSecretKey()
     {
         return secretKey;
     }
 
+    @Pure
     public String getPublicKeyAsZ85()
     {
         return publicTxt;
     }
 
+    @Pure
     public String getSecretKeyAsZ85()
     {
         return secretTxt;
     }
 
+    @Impure
     public void apply(ZMQ.Socket socket)
     {
         socket.setCurvePublicKey(publicKey);
         socket.setCurveSecretKey(secretKey);
     }
 
+    @Pure
     public ZMetadata getMetadata()
     {
         return metadata;
     }
 
+    @Impure
     public void setMeta(String key, String value)
     {
         metadata.set(key, value);
     }
 
+    @Impure
     public void unsetMeta(String key)
     {
         metadata.remove(key);
     }
 
+    @Pure
+    @Impure
     public String getMeta(String key)
     {
         return metadata.get(key);
     }
 
+    @Impure
     private void add(ZMetadata meta, ZConfig config)
     {
         String now = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH).format(new Date());
@@ -168,6 +187,7 @@ public class ZCert
      * @return the saved file or null if dumped to the standard output
      * @throws IOException if unable to save the file.
      */
+    @Impure
     public File savePublic(String filename) throws IOException
     {
         return publicConfig().save(filename);
@@ -178,11 +198,13 @@ public class ZCert
      * @param writer the writer to save the certificate into.
      * @throws IOException if unable to dump the public configuration.
      */
+    @Impure
     public void savePublic(Writer writer) throws IOException
     {
         publicConfig().save(writer);
     }
 
+    @Impure
     private ZConfig publicConfig()
     {
         ZConfig conf = new ZConfig("root", null);
@@ -203,6 +225,7 @@ public class ZCert
      * @return the saved file or null if dumped to the standard output
      * @throws IOException if unable to save the file.
      */
+    @Impure
     public File saveSecret(String filename) throws IOException
     {
         return secretConfig().save(filename);
@@ -213,11 +236,13 @@ public class ZCert
      * @param writer the writer to save the certificate into.
      * @throws IOException if unable to dump the configuration.
      */
+    @Impure
     public void saveSecret(Writer writer) throws IOException
     {
         secretConfig().save(writer);
     }
 
+    @Impure
     private ZConfig secretConfig()
     {
         ZConfig conf = new ZConfig("root", null);

@@ -1,9 +1,12 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.Msg;
 
 public class Msgs
 {
+    @SideEffectFree
     private Msgs()
     {
         // no possible instantiation
@@ -17,6 +20,7 @@ public class Msgs
      * @param includeLength true if the string in the message is prefixed with the length, false if not.
      * @return true if the message starts with the given string, otherwise false.
      */
+    @Impure
     public static boolean startsWith(Msg msg, String data, boolean includeLength)
     {
         final int length = data.length();

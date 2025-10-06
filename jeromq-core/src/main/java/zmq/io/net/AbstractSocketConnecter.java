@@ -1,5 +1,10 @@
 package zmq.io.net;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
@@ -18,6 +23,7 @@ import zmq.util.Utils;
 
 //  If 'delay' is true connecter first waits for a while, then starts
 //  connection process.
+@InheritableMustCall("close")
 public abstract class AbstractSocketConnecter<S extends SocketAddress> extends Own implements IPollEvents
 {
     //  ID of the timer used to delay the reconnection.
@@ -29,6 +35,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     private final Address<S> addr;
 
     //  Underlying socket.
+    @Owning
     private SocketChannel fd;
     private Poller.Handle handle;
 
@@ -47,6 +54,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     // Socket
     private final SocketBase socket;
 
+    @Impure
     public AbstractSocketConnecter(IOThread ioThread, SessionBase session, Options options, Address<S> addr,
             boolean delayedStart)
     {
@@ -64,6 +72,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         socket = session.getSocket();
     }
 
+    @Impure
     @Override
     protected void destroy()
     {
@@ -73,6 +82,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         ioObject.unplug();
     }
 
+    @Impure
     @Override
     protected void processPlug()
     {
@@ -85,6 +95,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         }
     }
 
+    @Impure
     @Override
     protected void processTerm(int linger)
     {
@@ -105,6 +116,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         super.processTerm(linger);
     }
 
+    @Impure
     @Override
     public void connectEvent()
     {
@@ -151,6 +163,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         socket.eventConnected(addr.toString(), channel);
     }
 
+    @Impure
     @Override
     public void timerEvent(int id)
     {
@@ -161,6 +174,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     }
 
     //  Internal function to start the actual connection establishment.
+    @Impure
     private void startConnecting()
     {
         //  Open the connecting socket.
@@ -188,6 +202,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     }
 
     //  Internal function to add a reconnect timer
+    @Impure
     private void addReconnectTimer()
     {
         int rcIvl = getNewReconnectIvl();
@@ -211,6 +226,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     //  Internal function to return a reconnect backoff delay.
     //  Will modify the currentReconnectIvl used for next call
     //  Returns the currently used interval
+    @Impure
     private int getNewReconnectIvl()
     {
         //  The new interval is the current interval + random value.
@@ -228,6 +244,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     //  Open connecting socket.
     // Returns true if connect was successful immediately.
     // Returns false if async connect was launched.
+    @Impure
     private boolean open() throws IOException
     {
         assert (fd == null);
@@ -271,12 +288,16 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         return rc;
     }
 
+    @Impure
     protected abstract SocketChannel openClient(Address.IZAddress<S> address) throws IOException;
 
+    @Impure
     protected abstract void tuneConnectedChannel(SocketChannel channel) throws IOException;
 
     //  Get the file descriptor of newly created connection. Returns
     //  null if the connection was unsuccessful.
+    @NotOwning
+    @Impure
     private SocketChannel connect()
     {
         try {
@@ -291,6 +312,8 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     }
 
     //  Close the connecting socket.
+    @EnsuresCalledMethods(value="this.fd", methods="close")
+    @Impure
     protected void close()
     {
         assert (fd != null);
@@ -304,18 +327,21 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         fd = null;
     }
 
+    @Impure
     @Override
     public void inEvent()
     {
         // connected but attaching to stream engine is not completed. do nothing
     }
 
+    @Impure
     @Override
     public void outEvent()
     {
         // connected but attaching to stream engine is not completed. do nothing
     }
 
+    @Impure
     @Override
     public String toString()
     {

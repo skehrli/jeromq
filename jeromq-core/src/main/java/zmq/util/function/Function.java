@@ -1,4 +1,5 @@
 package zmq.util.function;
+import org.checkerframework.dataflow.qual.Pure;
 
 /**
  * Represents a function that accepts one argument and produces a result.
@@ -18,5 +19,6 @@ public interface Function<T, R>
      * @param t the function argument
      * @return the function result
      */
+    @Pure
     R apply(T t);
 }

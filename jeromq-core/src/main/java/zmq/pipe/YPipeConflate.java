@@ -1,5 +1,8 @@
 package zmq.pipe;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import zmq.Msg;
 
 // Adapter for dbuffer, to plug it in instead of a queue for the sake
@@ -18,13 +21,15 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
     //  Following function (write) deliberately copies uninitialised data
     //  when used with zmq_msg. Initialising the VSM body for
     //  non-VSM messages won't be good for performance.
+    @Impure
     @Override
-    public void write(final T value, boolean incomplete)
+    public void write(final @Owning T value, boolean incomplete)
     {
         dbuffer.write(value);
     }
 
     // There are no incomplete items for conflate ypipe
+    @Pure
     @Override
     public T unwrite()
     {
@@ -35,6 +40,7 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
     //  is as of the usual ypipe.
     //  Returns false if the reader thread is sleeping. In that case,
     //  caller is obliged to wake the reader up before using the pipe again.
+    @Pure
     @Override
     public boolean flush()
     {
@@ -42,6 +48,7 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
     }
 
     //  Check whether item is available for reading.
+    @Impure
     @Override
     public boolean checkRead()
     {
@@ -54,6 +61,7 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
 
     //  Reads an item from the pipe. Returns false if there is no value.
     //  available.
+    @Impure
     @Override
     public T read()
     {
@@ -71,6 +79,7 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
     //  Applies the function fn to the first elemenent in the pipe
     //  and returns the value returned by the fn.
     //  The pipe mustn't be empty or the function crashes.
+    @Impure
     @Override
     public T probe()
     {

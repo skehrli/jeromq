@@ -1,5 +1,6 @@
 package org.zeromq.timer;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.util.Draft;
 import zmq.util.Timers;
 
@@ -10,6 +11,7 @@ import zmq.util.Timers;
 @Draft
 public interface TimerHandler extends Timers.Handler
 {
+    @SideEffectFree
     @Override
     void time(Object... args);
 }

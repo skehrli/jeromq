@@ -1,4 +1,6 @@
 package zmq;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 
 public enum Config
 {
@@ -67,11 +69,13 @@ public enum Config
 
     private final int value;
 
+    @Impure
     Config(int value)
     {
         this.value = value;
     }
 
+    @Pure
     public int getValue()
     {
         return value;

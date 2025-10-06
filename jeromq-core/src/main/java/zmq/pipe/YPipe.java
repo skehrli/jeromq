@@ -1,5 +1,7 @@
 package zmq.pipe;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class YPipe<T> implements YPipeBase<T>
@@ -27,6 +29,7 @@ public class YPipe<T> implements YPipeBase<T>
     //  atomic operations.
     private final AtomicInteger c;
 
+    @Impure
     public YPipe(int qsize)
     {
         queue = new YQueue<>(qsize);
@@ -41,8 +44,9 @@ public class YPipe<T> implements YPipeBase<T>
     //  set to true the item is assumed to be continued by items
     //  subsequently written to the pipe. Incomplete items are never
     //  flushed down the stream.
+    @Impure
     @Override
-    public void write(final T value, boolean incomplete)
+    public void write(final @Owning T value, boolean incomplete)
     {
         //  Place the value to the queue, add new terminator element.
         queue.push(value);
@@ -55,6 +59,7 @@ public class YPipe<T> implements YPipeBase<T>
 
     //  Pop an incomplete item from the pipe. Returns true is such
     //  item exists, false otherwise.
+    @Impure
     @Override
     public T unwrite()
     {
@@ -68,6 +73,7 @@ public class YPipe<T> implements YPipeBase<T>
     //  Flush all the completed items into the pipe. Returns false if
     //  the reader thread is sleeping. In that case, caller is obliged to
     //  wake the reader up before using the pipe again.
+    @Impure
     @Override
     public boolean flush()
     {
@@ -95,6 +101,7 @@ public class YPipe<T> implements YPipeBase<T>
     }
 
     //  Check whether item is available for reading.
+    @Impure
     @Override
     public boolean checkRead()
     {
@@ -127,6 +134,7 @@ public class YPipe<T> implements YPipeBase<T>
 
     //  Reads an item from the pipe. Returns null if there is no value.
     //  available.
+    @Impure
     @Override
     public T read()
     {
@@ -143,6 +151,7 @@ public class YPipe<T> implements YPipeBase<T>
 
     //  Returns the first element in the pipe without removing it.
     //  The pipe mustn't be empty or the function crashes.
+    @Impure
     @Override
     public T probe()
     {

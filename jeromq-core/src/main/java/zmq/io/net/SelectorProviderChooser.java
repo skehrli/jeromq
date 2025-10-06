@@ -1,5 +1,6 @@
 package zmq.io.net;
 
+import org.checkerframework.dataflow.qual.Pure;
 import java.nio.channels.spi.SelectorProvider;
 
 import zmq.Options;
@@ -13,5 +14,6 @@ import zmq.Options;
  */
 public interface SelectorProviderChooser
 {
+    @Pure
     SelectorProvider choose(Address.IZAddress addr, Options options);
 }

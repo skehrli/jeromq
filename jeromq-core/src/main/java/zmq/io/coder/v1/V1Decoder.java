@@ -1,5 +1,6 @@
 package zmq.io.coder.v1;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -13,6 +14,7 @@ public class V1Decoder extends Decoder
 {
     private final ByteBuffer tmpbuf;
 
+    @Impure
     public V1Decoder(Errno errno, int bufsize, long maxmsgsize, MsgAllocator allocator)
     {
         super(errno, bufsize, maxmsgsize, allocator);
@@ -24,6 +26,7 @@ public class V1Decoder extends Decoder
         nextStep(tmpbuf, oneByteSizeReady);
     }
 
+    @Impure
     @Override
     protected Step.Result oneByteSizeReady()
     {
@@ -54,6 +57,7 @@ public class V1Decoder extends Decoder
         return Step.Result.MORE_DATA;
     }
 
+    @Impure
     @Override
     protected Step.Result eightByteSizeReady()
     {
@@ -75,6 +79,7 @@ public class V1Decoder extends Decoder
         return rc;
     }
 
+    @Impure
     @Override
     protected Step.Result flagsReady()
     {
@@ -89,6 +94,7 @@ public class V1Decoder extends Decoder
         return Step.Result.MORE_DATA;
     }
 
+    @Impure
     @Override
     protected Step.Result messageReady()
     {

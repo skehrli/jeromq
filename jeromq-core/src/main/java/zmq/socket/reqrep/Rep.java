@@ -1,5 +1,6 @@
 package zmq.socket.reqrep;
 
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.ZError;
@@ -15,6 +16,7 @@ public class Rep extends Router
     //  of the request is the backtrace stack.
     private boolean requestBegins;
 
+    @Impure
     public Rep(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -25,6 +27,7 @@ public class Rep extends Router
         options.canSendHelloMsg = false;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -50,6 +53,7 @@ public class Rep extends Router
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -103,12 +107,14 @@ public class Rep extends Router
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return !sendingReply && super.xhasIn();
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {

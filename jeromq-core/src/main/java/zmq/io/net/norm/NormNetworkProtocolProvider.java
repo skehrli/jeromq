@@ -1,5 +1,7 @@
 package zmq.io.net.norm;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.net.InetSocketAddress;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -19,6 +21,7 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class NormNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
+    @Pure
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
@@ -26,6 +29,7 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return false;
     }
 
+    @Pure
     @Override
     public Listener getListener(IOThread ioThread, SocketBase socket,
                                 Options options)
@@ -34,6 +38,7 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return null;
     }
 
+    @Pure
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
@@ -41,6 +46,7 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return null;
     }
 
+    @Impure
     @Override
     public void startConnecting(Options options, IOThread ioThread,
                                 SessionBase session, Address<InetSocketAddress> addr,
@@ -67,6 +73,7 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         }
     }
 
+    @Pure
     @Override
     public boolean wantsIOThread()
     {

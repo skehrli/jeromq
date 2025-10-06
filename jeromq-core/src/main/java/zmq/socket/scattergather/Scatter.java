@@ -1,5 +1,6 @@
 package zmq.socket.scattergather;
 
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -14,6 +15,7 @@ public class Scatter extends SocketBase
     private final LB lb;
 
     //  Holds the prefetched message.
+    @Impure
     public Scatter(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -23,6 +25,7 @@ public class Scatter extends SocketBase
         lb = new LB();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -35,6 +38,7 @@ public class Scatter extends SocketBase
         lb.attach(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -46,18 +50,21 @@ public class Scatter extends SocketBase
         return lb.sendpipe(msg, errno, null);
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {
         return lb.hasOut();
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         lb.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {

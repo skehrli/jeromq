@@ -1,5 +1,7 @@
 package zmq.io.coder.raw;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.io.coder.Encoder;
 import zmq.util.Errno;
 
@@ -7,6 +9,7 @@ import zmq.util.Errno;
 
 public class RawEncoder extends Encoder
 {
+    @Impure
     public RawEncoder(Errno errno, int bufsize)
     {
         super(errno, bufsize);
@@ -14,12 +17,14 @@ public class RawEncoder extends Encoder
         initStep(messageReady, true);
     }
 
+    @SideEffectFree
     @Override
     protected void sizeReady()
     {
         throw new UnsupportedOperationException();
     }
 
+    @Impure
     @Override
     protected void messageReady()
     {

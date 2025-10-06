@@ -1,5 +1,13 @@
 package zmq;
 
+import org.checkerframework.framework.qual.EnsuresQualifier;
+import org.checkerframework.framework.qual.RequiresQualifier;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.ref.Reference;
@@ -51,6 +59,7 @@ public class Ctx
         public final SocketBase socket;
         public final Options    options;
 
+        @SideEffectFree
         public Endpoint(SocketBase socket, Options options)
         {
             this.socket = socket;
@@ -65,6 +74,7 @@ public class Ctx
         private final Pipe     connectPipe;
         private final Pipe     bindPipe;
 
+        @SideEffectFree
         public PendingConnection(Endpoint endpoint, Pipe connectPipe, Pipe bindPipe)
         {
             super();
@@ -110,6 +120,7 @@ public class Ctx
     private final List<Selector> selectors = new ArrayList<>();
 
     //  The reaper thread.
+    @Owning
     private Reaper reaper;
 
     //  I/O threads.
@@ -120,6 +131,7 @@ public class Ctx
     private IMailbox[] slots;
 
     //  Mailbox for zmq_term thread.
+    @Owning
     private final Mailbox termMailbox;
 
     //  List of inproc endpoints within this context.
@@ -184,6 +196,11 @@ public class Ctx
 
     private ChannelForwardHolder forwardHolder = null;
 
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @EnsuresQualifier(expression="this.sockets", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @RequiresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Impure
     public Ctx()
     {
         active = true;
@@ -209,6 +226,11 @@ public class Ctx
         endpoints = new HashMap<>();
     }
 
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @RequiresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @EnsuresCalledMethods(value={"this.reaper", "this.termMailbox"}, methods="close")
+    @Impure
     private void destroy() throws IOException
     {
         assert (sockets.isEmpty());
@@ -249,6 +271,7 @@ public class Ctx
     /**
      * @return false if {@link #terminate()}terminate() has been called.
      */
+    @Pure
     public boolean isActive()
     {
         return active;
@@ -258,6 +281,7 @@ public class Ctx
      * @return false if {@link #terminate()}terminate() has been called.
      * @deprecated use {@link #isActive()} instead
      */
+    @Pure
     @Deprecated
     public boolean checkTag()
     {
@@ -269,6 +293,9 @@ public class Ctx
     //  down. If there are open sockets still, the deallocation happens
     //  after the last one is closed.
 
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @EnsuresQualifier(expression="this.selectors", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionWithoutObligation.class)
+    @Impure
     public void terminate()
     {
         slotSync.lock();
@@ -332,6 +359,7 @@ public class Ctx
         }
     }
 
+    @Impure
     final void shutdown()
     {
         slotSync.lock();
@@ -355,6 +383,7 @@ public class Ctx
         }
     }
 
+    @Impure
     private void chechStarted()
     {
         if  (!starting.get()) {
@@ -369,6 +398,8 @@ public class Ctx
      *                explicit handler and will use the one defined for the {@link ThreadGroup}.
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Impure
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler)
     {
         chechStarted();
@@ -378,6 +409,9 @@ public class Ctx
     /**
      * @return The handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.
      */
+    // @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    // @RequiresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Pure
     public UncaughtExceptionHandler getUncaughtExceptionHandler()
     {
         return exhandler;
@@ -390,6 +424,8 @@ public class Ctx
      * @param handler The object to use as this thread's handler for recoverable exceptions notifications.
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Impure
     public void setNotificationExceptionHandler(UncaughtExceptionHandler handler)
     {
         chechStarted();
@@ -399,6 +435,8 @@ public class Ctx
     /**
      * @return The handler invoked when a non-fatal exceptions is thrown in zmq.poll.Poller#run()
      */
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Pure
     public UncaughtExceptionHandler getNotificationExceptionHandler()
     {
         return exnotification;
@@ -412,6 +450,7 @@ public class Ctx
      * @param threadFactory the thread factory used by {@link zmq.poll.Poller}
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
+    @Impure
     public void setThreadFactory(BiFunction<Runnable, String, Thread> threadFactory)
     {
         chechStarted();
@@ -421,6 +460,8 @@ public class Ctx
     /**
      * @return the current thread factory
      */
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Pure
     public BiFunction<Runnable, String, Thread> getThreadFactory()
     {
         return threadFactory;
@@ -434,6 +475,7 @@ public class Ctx
      * @throws IllegalStateException If context was already initialized by the creation of a socket, and the
      *         option can't be changed.
      */
+    @Impure
     public boolean set(int option, int optval)
     {
         if (option == ZMQ.ZMQ_MAX_SOCKETS && optval >= 1) {
@@ -480,6 +522,7 @@ public class Ctx
         return true;
     }
 
+    @Pure
     public int get(int option)
     {
         int rc;
@@ -501,6 +544,7 @@ public class Ctx
         return rc;
     }
 
+    @Impure
     public SocketBase createSocket(int type)
     {
         SocketBase s;
@@ -542,6 +586,7 @@ public class Ctx
         return s;
     }
 
+    @Impure
     private void initSlots()
     {
         slotSync.lock();
@@ -587,6 +632,7 @@ public class Ctx
         }
     }
 
+    @Impure
     void destroySocket(SocketBase socket)
     {
         slotSync.lock();
@@ -612,7 +658,9 @@ public class Ctx
     }
 
     // Creates a Selector that will be closed when the context is destroyed.
-    public Selector createSelector()
+    @EnsuresQualifier(expression="this.ioThreads", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollection.class)
+    @Impure
+    public @NotOwning Selector createSelector()
     {
         selectorSync.lock();
         try {
@@ -629,7 +677,8 @@ public class Ctx
         }
     }
 
-    public boolean closeSelector(Selector selector)
+    @Impure
+    public boolean closeSelector(@Owning Selector selector)
     {
         selectorSync.lock();
         try {
@@ -650,12 +699,15 @@ public class Ctx
     }
 
     //  Returns reaper thread object.
+    @NotOwning
+    @Pure
     ZObject getReaper()
     {
         return reaper;
     }
 
     //  Send command to the destination thread.
+    @Impure
     void sendCommand(int tid, final Command command)
     {
         //        System.out.println(Thread.currentThread().getName() + ": Sending command " + command);
@@ -665,6 +717,7 @@ public class Ctx
     //  Returns the I/O thread that is the least busy at the moment.
     //  Affinity specifies which I/O threads are eligible (0 = all).
     //  Returns NULL if no I/O thread is available.
+    @Impure
     IOThread chooseIoThread(long affinity)
     {
         if (ioThreads.isEmpty()) {
@@ -688,6 +741,7 @@ public class Ctx
     }
 
     //  Management of inproc endpoints.
+    @Impure
     boolean registerEndpoint(String addr, Endpoint endpoint)
     {
         endpointsSync.lock();
@@ -702,6 +756,7 @@ public class Ctx
         return inserted == null;
     }
 
+    @Impure
     boolean unregisterEndpoint(String addr, SocketBase socket)
     {
         endpointsSync.lock();
@@ -719,6 +774,7 @@ public class Ctx
         return false;
     }
 
+    @Impure
     void unregisterEndpoints(SocketBase socket)
     {
         endpointsSync.lock();
@@ -731,6 +787,7 @@ public class Ctx
         }
     }
 
+    @Impure
     Endpoint findEndpoint(String addr)
     {
         Endpoint endpoint;
@@ -754,6 +811,7 @@ public class Ctx
         return endpoint;
     }
 
+    @Impure
     void pendConnection(String addr, Endpoint endpoint, Pipe[] pipes)
     {
         PendingConnection pendingConnection = new PendingConnection(endpoint, pipes[0], pipes[1]);
@@ -775,6 +833,7 @@ public class Ctx
         }
     }
 
+    @Impure
     void connectPending(String addr, SocketBase bindSocket)
     {
         endpointsSync.lock();
@@ -791,6 +850,7 @@ public class Ctx
         }
     }
 
+    @Impure
     private void connectInprocSockets(SocketBase bindSocket, Options bindOptions, PendingConnection pendingConnection,
                                       Side side)
     {
@@ -855,6 +915,7 @@ public class Ctx
         }
     }
 
+    @Pure
     public Errno errno()
     {
         return errno;
@@ -865,6 +926,7 @@ public class Ctx
      * @param channel a channel to forward
      * @return the handle of the channel to be forwarded, used to retrieve it in {@link #getForwardedChannel(Integer)}
      */
+    @Impure
     int forwardChannel(SelectableChannel channel)
     {
         synchronized (ChannelForwardHolder.class) {
@@ -886,6 +948,7 @@ public class Ctx
      * @param handle
      * @return
      */
+    @Impure
     SelectableChannel getForwardedChannel(Integer handle)
     {
         cleanForwarded();
@@ -901,6 +964,7 @@ public class Ctx
     /**
      * Clean all empty references
      */
+    @Impure
     private void cleanForwarded()
     {
         Reference<? extends SelectableChannel> ref;
@@ -910,6 +974,7 @@ public class Ctx
         }
     }
 
+    @Impure
     private Thread createThread(Runnable target, String name)
     {
         Thread t = new Thread(target, name);

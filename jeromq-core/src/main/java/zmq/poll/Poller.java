@@ -1,5 +1,8 @@
 package zmq.poll;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.channels.CancelledKeyException;
@@ -29,6 +32,7 @@ public final class Poller extends PollerBase implements Runnable
         private int     ops;
         private boolean cancelled;
 
+        @SideEffectFree
         public Handle(SelectableChannel fd, IPollEvents handler)
         {
             assert (fd != null);
@@ -37,6 +41,7 @@ public final class Poller extends PollerBase implements Runnable
             this.handler = handler;
         }
 
+        @Pure
         @Override
         public int hashCode()
         {
@@ -47,6 +52,7 @@ public final class Poller extends PollerBase implements Runnable
             return result;
         }
 
+        @Pure
         @Override
         public boolean equals(Object other)
         {
@@ -63,6 +69,7 @@ public final class Poller extends PollerBase implements Runnable
             return this.fd.equals(that.fd) && this.handler.equals(that.handler);
         }
 
+        @Pure
         @Override
         public String toString()
         {
@@ -86,6 +93,7 @@ public final class Poller extends PollerBase implements Runnable
 
     private Selector selector;
 
+    @Impure
     public Poller(Ctx ctx, String name)
     {
         super(name, ctx.getThreadFactory());
@@ -95,6 +103,7 @@ public final class Poller extends PollerBase implements Runnable
         selector = ctx.createSelector();
     }
 
+    @Impure
     public void destroy()
     {
         try {
@@ -111,6 +120,7 @@ public final class Poller extends PollerBase implements Runnable
         }
     }
 
+    @Impure
     public Handle addHandle(SelectableChannel fd, IPollEvents events)
     {
         assert (Thread.currentThread() == worker || !worker.isAlive());
@@ -123,6 +133,7 @@ public final class Poller extends PollerBase implements Runnable
         return handle;
     }
 
+    @Impure
     public void removeHandle(Handle handle)
     {
         assert (Thread.currentThread() == worker || !worker.isAlive());
@@ -135,36 +146,43 @@ public final class Poller extends PollerBase implements Runnable
         adjustLoad(-1);
     }
 
+    @Impure
     public void setPollIn(Handle handle)
     {
         register(handle, SelectionKey.OP_READ, true);
     }
 
+    @Impure
     public void resetPollIn(Handle handle)
     {
         register(handle, SelectionKey.OP_READ, false);
     }
 
+    @Impure
     public void setPollOut(Handle handle)
     {
         register(handle, SelectionKey.OP_WRITE, true);
     }
 
+    @Impure
     public void resetPollOut(Handle handle)
     {
         register(handle, SelectionKey.OP_WRITE, false);
     }
 
+    @Impure
     public void setPollConnect(Handle handle)
     {
         register(handle, SelectionKey.OP_CONNECT, true);
     }
 
+    @Impure
     public void setPollAccept(Handle handle)
     {
         register(handle, SelectionKey.OP_ACCEPT, true);
     }
 
+    @Impure
     private void register(Handle handle, int ops, boolean add)
     {
         assert (Thread.currentThread() == worker || !worker.isAlive());
@@ -178,11 +196,13 @@ public final class Poller extends PollerBase implements Runnable
         retired = true;
     }
 
+    @Impure
     public void start()
     {
         worker.start();
     }
 
+    @Impure
     public void stop()
     {
         stopping.set(true);
@@ -190,6 +210,7 @@ public final class Poller extends PollerBase implements Runnable
         selector.wakeup();
     }
 
+    @Impure
     @Override
     public void run()
     {
@@ -283,6 +304,7 @@ public final class Poller extends PollerBase implements Runnable
         stopped.countDown();
     }
 
+    @Impure
     private int maybeRebuildSelector(int returnsImmediately, long timeout, long start)
     {
         //  Guess JDK epoll bug
@@ -300,6 +322,7 @@ public final class Poller extends PollerBase implements Runnable
         return returnsImmediately;
     }
 
+    @Impure
     private void rebuildSelector()
     {
         Selector oldSelector = selector;

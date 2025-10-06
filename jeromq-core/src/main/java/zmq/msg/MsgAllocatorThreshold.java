@@ -1,5 +1,7 @@
 package zmq.msg;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.Config;
 import zmq.Msg;
 
@@ -10,16 +12,20 @@ public class MsgAllocatorThreshold implements MsgAllocator
 
     public final int threshold;
 
+    @SideEffectFree
+    @Impure
     public MsgAllocatorThreshold()
     {
         this(Config.MSG_ALLOCATION_HEAP_THRESHOLD.getValue());
     }
 
+    @SideEffectFree
     public MsgAllocatorThreshold(int threshold)
     {
         this.threshold = threshold;
     }
 
+    @Impure
     @Override
     public Msg allocate(int size)
     {

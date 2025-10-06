@@ -1,5 +1,6 @@
 package org.zeromq.proto;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -48,6 +49,7 @@ public class ZPicture
      * @return a new {@link ZMsg} that encode the arguments
      * @api.note Does not change or take ownership of any arguments.
      */
+    @Impure
     @Draft
     public ZMsg msgBinaryPicture(String picture, Object... args)
     {
@@ -162,6 +164,7 @@ public class ZPicture
         return msg;
     }
 
+    @Impure
     @Draft
     public boolean sendBinaryPicture(Socket socket, String picture, Object... args)
     {
@@ -179,6 +182,7 @@ public class ZPicture
      *                for the supported argument types.
      * @return the picture elements as object array
      **/
+    @Impure
     @Draft
     public Object[] recvBinaryPicture(Socket socket, final String picture)
     {
@@ -277,6 +281,7 @@ public class ZPicture
      * @param args    Arguments according to the picture
      * @return true if successful, false if sending failed for any reason
      */
+    @Impure
     @Draft
     public boolean sendPicture(Socket socket, String picture, Object... args)
     {
@@ -368,6 +373,7 @@ public class ZPicture
      *
      * @return the picture elements as object array
      */
+    @Impure
     @Draft
     public Object[] recvPicture(Socket socket, String picture)
     {

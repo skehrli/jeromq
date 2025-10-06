@@ -1,4 +1,6 @@
 package zmq.util.function;
+import org.checkerframework.checker.mustcall.qual.MustCallUnknown;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 /**
  * Represents an operation that accepts a single input argument and returns no
@@ -11,12 +13,13 @@ package zmq.util.function;
  * @param <T> the type of the input to the operation
  *
  */
-public interface Consumer<T>
+public interface Consumer<T extends @MustCallUnknown Object>
 {
     /**
      * Performs this operation on the given argument.
      *
      * @param t the input argument
      */
+    @SideEffectFree
     void accept(T t);
 }

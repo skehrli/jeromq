@@ -1,5 +1,6 @@
 package zmq.socket.reqrep;
 
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -39,6 +40,7 @@ public class Req extends Dealer
     //  still pending.
     private boolean strict;
 
+    @Impure
     public Req(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -51,6 +53,7 @@ public class Req extends Dealer
         strict = true;
     }
 
+    @Impure
     @Override
     public boolean xsend(final Msg msg)
     {
@@ -121,6 +124,7 @@ public class Req extends Dealer
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -181,6 +185,7 @@ public class Req extends Dealer
         return msg;
     }
 
+    @Impure
     @Override
     public boolean xhasIn()
     {
@@ -189,12 +194,14 @@ public class Req extends Dealer
         return receivingReply && super.xhasIn();
     }
 
+    @Impure
     @Override
     public boolean xhasOut()
     {
         return !receivingReply && super.xhasOut();
     }
 
+    @Impure
     @Override
     protected boolean xsetsockopt(int option, Object optval)
     {
@@ -212,6 +219,7 @@ public class Req extends Dealer
         return super.xsetsockopt(option, optval);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -221,6 +229,7 @@ public class Req extends Dealer
         super.xpipeTerminated(pipe);
     }
 
+    @Impure
     private Msg recvReplyPipe()
     {
         while (true) {
@@ -247,6 +256,7 @@ public class Req extends Dealer
 
         private State state;
 
+        @Impure
         public ReqSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
                 final Address addr)
         {
@@ -255,6 +265,7 @@ public class Req extends Dealer
             state = State.BOTTOM;
         }
 
+        @Impure
         @Override
         public boolean pushMsg(Msg msg)
         {
@@ -302,6 +313,7 @@ public class Req extends Dealer
             return false;
         }
 
+        @Impure
         @Override
         public void reset()
         {

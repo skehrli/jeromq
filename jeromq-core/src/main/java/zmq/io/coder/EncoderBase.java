@@ -1,5 +1,8 @@
 package zmq.io.coder;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -32,6 +35,7 @@ public abstract class EncoderBase implements IEncoder
 
     private final Errno errno;
 
+    @Impure
     protected EncoderBase(Errno errno, int bufferSize)
     {
         this.errno = errno;
@@ -41,6 +45,7 @@ public abstract class EncoderBase implements IEncoder
     }
 
     //  Load a new message into encoder.
+    @Impure
     @Override
     public final void loadMsg(Msg msg)
     {
@@ -52,6 +57,7 @@ public abstract class EncoderBase implements IEncoder
     //  The function returns a batch of binary data. The data
     //  are filled to a supplied buffer. If no buffer is supplied (data
     //  is NULL) encoder will provide buffer of its own.
+    @Impure
     @Override
     public final int encode(ValueReference<ByteBuffer> data, int size)
     {
@@ -118,22 +124,26 @@ public abstract class EncoderBase implements IEncoder
         return pos;
     }
 
+    @Impure
     @Override
     public void encoded()
     {
         buffer.flip();
     }
 
+    @Impure
     protected void encodingError()
     {
         error = true;
     }
 
+    @Pure
     public final boolean isError()
     {
         return error;
     }
 
+    @Impure
     protected void next()
     {
         if (next != null) {
@@ -141,6 +151,7 @@ public abstract class EncoderBase implements IEncoder
         }
     }
 
+    @Impure
     protected void nextStep(Msg msg, Runnable state, boolean beginning)
     {
         if (msg == null) {
@@ -153,6 +164,7 @@ public abstract class EncoderBase implements IEncoder
 
     //  This function should be called from derived class to write the data
     //  to the buffer and schedule next state machine action.
+    @Impure
     private void nextStep(byte[] buf, int toWrite, Runnable next, boolean newMsgFlag)
     {
         if (buf != null) {
@@ -167,16 +179,19 @@ public abstract class EncoderBase implements IEncoder
         this.newMsgFlag = newMsgFlag;
     }
 
+    @Impure
     protected void initStep(Runnable next, boolean newMsgFlag)
     {
         nextStep((byte[]) null, 0, next, newMsgFlag);
     }
 
+    @Impure
     private void nextStep(ByteBuffer buf, Runnable next, boolean newMsgFlag)
     {
         nextStep(buf, buf.limit(), next, newMsgFlag);
     }
 
+    @Impure
     protected void nextStep(ByteBuffer buf, int toWrite, Runnable next, boolean newMsgFlag)
     {
         buf.limit(toWrite);
@@ -188,16 +203,19 @@ public abstract class EncoderBase implements IEncoder
         this.newMsgFlag = newMsgFlag;
     }
 
+    @Impure
     public int errno()
     {
         return errno.get();
     }
 
+    @Impure
     public void errno(int err)
     {
         this.errno.set(err);
     }
 
+    @SideEffectFree
     @Override
     public void destroy()
     {

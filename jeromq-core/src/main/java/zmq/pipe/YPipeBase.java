@@ -1,4 +1,5 @@
 package zmq.pipe;
+import org.checkerframework.dataflow.qual.Impure;
 
 public interface YPipeBase<T>
 {
@@ -6,26 +7,32 @@ public interface YPipeBase<T>
     //  set to true the item is assumed to be continued by items
     //  subsequently written to the pipe. Incomplete items are never
     //  flushed down the stream.
+    @Impure
     void write(final T value, boolean incomplete);
 
     //  Pop an incomplete item from the pipe. Returns true is such
     //  item exists, false otherwise.
+    @Impure
     T unwrite();
 
     //  Flush all the completed items into the pipe. Returns false if
     //  the reader thread is sleeping. In that case, caller is obliged to
     //  wake the reader up before using the pipe again.
+    @Impure
     boolean flush();
 
     //  Check whether item is available for reading.
+    @Impure
     boolean checkRead();
 
     //  Reads an item from the pipe. Returns false if there is no value.
     //  available.
+    @Impure
     T read();
 
     //  Applies the function fn to the first elemenent in the pipe
     //  and returns the value returned by the fn.
     //  The pipe mustn't be empty or the function crashes.
+    @Impure
     T probe();
 }

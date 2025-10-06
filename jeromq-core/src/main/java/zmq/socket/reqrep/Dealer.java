@@ -1,5 +1,7 @@
 package zmq.socket.reqrep;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -23,6 +25,7 @@ public class Dealer extends SocketBase
     private boolean probeRouter;
 
     //  Holds the prefetched message.
+    @Impure
     public Dealer(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -35,6 +38,7 @@ public class Dealer extends SocketBase
         lb = new LB();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -50,6 +54,7 @@ public class Dealer extends SocketBase
         lb.attach(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xsetsockopt(int option, Object optval)
     {
@@ -61,48 +66,57 @@ public class Dealer extends SocketBase
         return false;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
         return sendpipe(msg, null);
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
         return recvpipe(null);
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return fq.hasIn();
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {
         return lb.hasOut();
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         lb.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -110,11 +124,13 @@ public class Dealer extends SocketBase
         lb.terminated(pipe);
     }
 
+    @Impure
     protected final boolean sendpipe(Msg msg, ValueReference<Pipe> pipe)
     {
         return lb.sendpipe(msg, errno, pipe);
     }
 
+    @Impure
     protected final Msg recvpipe(ValueReference<Pipe> pipe)
     {
         return fq.recvPipe(errno, pipe);

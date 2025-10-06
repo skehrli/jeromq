@@ -1,5 +1,8 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,6 +39,7 @@ public class Metadata
          * @param valueAsString the value in a string representation.
          * @return 0 to continue the parsing process, any other value to interrupt it.
          */
+        @Pure
         int parsed(String name, byte[] value, String valueAsString);
     }
 
@@ -50,11 +54,13 @@ public class Metadata
     //  Dictionary holding metadata.
     private final Map<String, String> dictionary = new ConcurrentHashMap<>();
 
+    @SideEffectFree
     public Metadata()
     {
         super();
     }
 
+    @Impure
     public Metadata(Properties dictionary)
     {
         // Ensure a conversion of each entry to a String.
@@ -62,6 +68,7 @@ public class Metadata
         dictionary.forEach((key, value) -> this.dictionary.put(key.toString(), value.toString()));
     }
 
+    @Impure
     public Metadata(Map<String, String> dictionary)
     {
         dictionary.forEach((key, value) -> this.dictionary.put(key, Optional.ofNullable(value).orElse("")));
@@ -82,6 +89,7 @@ public class Metadata
      *
      * @return a set view of the keys contained in this metadata
      */
+    @SideEffectFree
     public Set<String> keySet()
     {
         return dictionary.keySet();
@@ -103,6 +111,7 @@ public class Metadata
      *
      * @return a set view of the properties contained in this metadata
      */
+    @SideEffectFree
     public Set<Entry<String, String>> entrySet()
     {
         return dictionary.entrySet();
@@ -123,6 +132,7 @@ public class Metadata
      *
      * @return a collection view of the values contained in this map
      */
+    @SideEffectFree
     public Collection<String> values()
     {
         return dictionary.values();
@@ -141,6 +151,7 @@ public class Metadata
      *
      * @param key key whose mapping is to be removed from the map
      */
+    @Impure
     public void remove(String key)
     {
         dictionary.remove(key);
@@ -153,6 +164,7 @@ public class Metadata
      * @param property the property name
      * @return the value of the property, or {@code null} if it does not exist.
      */
+    @Pure
     public String get(String property)
     {
         return dictionary.get(property);
@@ -166,6 +178,7 @@ public class Metadata
      * @param value value to be associated with the specified property
      * @deprecated Use {@link #put(String, String)} instead
      */
+    @Impure
     @Deprecated
     public void set(String property, String value)
     {
@@ -179,6 +192,7 @@ public class Metadata
      * @param property the property name
      * @param value value to be associated with the specified property
      */
+    @Impure
     public void put(String property, String value)
     {
         if (value != null) {
@@ -189,12 +203,14 @@ public class Metadata
         }
     }
 
+    @Pure
     @Override
     public int hashCode()
     {
         return dictionary.hashCode();
     }
 
+    @Pure
     @Override
     public boolean equals(Object other)
     {
@@ -211,6 +227,7 @@ public class Metadata
         return this.dictionary.equals(that.dictionary);
     }
 
+    @Impure
     public void set(Metadata zapProperties)
     {
         dictionary.putAll(zapProperties.dictionary);
@@ -221,6 +238,7 @@ public class Metadata
      *
      * @return {@code true} if this map contains no key-value mappings
      */
+    @Pure
     public boolean isEmpty()
     {
         return dictionary.isEmpty();
@@ -232,6 +250,7 @@ public class Metadata
      * @param property property the name of the property to be tested.
      * @return {@code true} if this metada contains the property
      */
+    @Pure
     public boolean containsKey(String property)
     {
         return dictionary.containsKey(property);
@@ -241,6 +260,7 @@ public class Metadata
      * Removes all the properties.
      * The map will be empty after this call returns.
      */
+    @Impure
     public void clear()
     {
         dictionary.clear();
@@ -252,11 +272,13 @@ public class Metadata
      *
      * @return the number of properties
      */
+    @Pure
     public int size()
     {
         return dictionary.size();
     }
 
+    @Pure
     @Override
     public String toString()
     {
@@ -274,6 +296,7 @@ public class Metadata
      * @return a new byte array
      * @throws IllegalStateException if the content can't be serialized
      */
+    @Impure
     public byte[] bytes()
     {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream(bytesSize())) {
@@ -290,6 +313,7 @@ public class Metadata
      * of non ASCII value in it.
      * @return the size estimation
      */
+    @SideEffectFree
     private int bytesSize()
     {
         int size = 0;
@@ -314,6 +338,7 @@ public class Metadata
      * @throws IOException if an I/O error occurs.
      * @throws IllegalStateException if one of the properties name size is bigger than 255
      */
+    @Impure
     public void write(OutputStream stream) throws IOException
     {
         for (Entry<String, String> entry : dictionary.entrySet()) {
@@ -344,6 +369,7 @@ public class Metadata
      * @param listener an optional {@link ParseListener}, can be null.
      * @return 0 if successful. Otherwise, it returns {@code zmq.ZError.EPROTO} or the error value from the {@link ParseListener}.
      */
+    @Impure
     public int read(Msg msg, int offset, ParseListener listener)
     {
         return read(msg.buf(), offset, listener);
@@ -362,6 +388,7 @@ public class Metadata
      * @param listener an optional {@link ParseListener}, can be null.
      * @return 0 if successful. Otherwise, it returns {@code zmq.ZError.EPROTO} or the error value from the {@link ParseListener}.
      */
+    @Impure
     public int read(ByteBuffer msg, int offset, ParseListener listener)
     {
         ByteBuffer data = msg.duplicate();
@@ -415,6 +442,7 @@ public class Metadata
         return 0;
     }
 
+    @Impure
     private byte[] bytes(final ByteBuffer buf, final int position, final int length)
     {
         final byte[] bytes = new byte[length];

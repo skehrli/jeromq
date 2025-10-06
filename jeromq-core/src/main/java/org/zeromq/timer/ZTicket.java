@@ -1,5 +1,8 @@
 package org.zeromq.timer;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,6 +50,7 @@ public final class ZTicket
         private long               delay;
         private boolean            alive = true;
 
+        @SideEffectFree
         private Ticket(ZTicket parent, long now, long delay, TimerHandler handler, Object... args)
         {
             assert (args != null);
@@ -60,6 +64,7 @@ public final class ZTicket
         /**
          * Resets the ticket.
          */
+        @Impure
         public void reset()
         {
             if (alive) {
@@ -72,6 +77,7 @@ public final class ZTicket
          * Cancels a ticket.
          * @return true if cancelled, false if already cancelled.
          */
+        @Impure
         public boolean cancel()
         {
             if (alive) {
@@ -86,6 +92,7 @@ public final class ZTicket
          * Changes the delay of the ticket.
          * @param delay the new delay of the ticket.
          */
+        @Impure
         public void setDelay(long delay)
         {
             if (alive) {
@@ -94,6 +101,7 @@ public final class ZTicket
             }
         }
 
+        @Pure
         @Override
         public int compareTo(Ticket other)
         {
@@ -113,27 +121,33 @@ public final class ZTicket
 
     private boolean sort;
 
+    @Impure
     public ZTicket()
     {
         this(() -> TimeUnit.NANOSECONDS.toMillis(Clock.nowNS()));
     }
 
+    @SideEffectFree
+    @Impure
     ZTicket(Supplier<Long> clock)
     {
         this(clock, new ArrayList<>());
     }
 
+    @SideEffectFree
     ZTicket(Supplier<Long> clock, List<Ticket> tickets)
     {
         this.clock = clock;
         this.tickets = tickets;
     }
 
+    @Impure
     private long now()
     {
         return clock.get();
     }
 
+    @Impure
     private void insert(Ticket ticket)
     {
         sort = tickets.add(ticket);
@@ -146,6 +160,7 @@ public final class ZTicket
      * @param args the optional arguments for the handler.
      * @return an opaque handle for further cancel and reset.
      */
+    @Impure
     public Ticket add(long delay, TimerHandler handler, Object... args)
     {
         if (handler == null) {
@@ -161,6 +176,7 @@ public final class ZTicket
      * Returns the time in millisecond until the next ticket.
      * @return the time in millisecond until the next ticket.
      */
+    @Impure
     public long timeout()
     {
         if (tickets.isEmpty()) {
@@ -183,6 +199,7 @@ public final class ZTicket
      * Execute the tickets.
      * @return the number of tickets triggered.
      */
+    @Impure
     public int execute()
     {
         int executed = 0;
@@ -216,6 +233,7 @@ public final class ZTicket
         return executed;
     }
 
+    @Impure
     private void sortIfNeeded()
     {
         if (sort) {

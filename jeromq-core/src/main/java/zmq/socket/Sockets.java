@@ -1,5 +1,7 @@
 package zmq.socket;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,6 +32,7 @@ import zmq.socket.scattergather.Scatter;
 public enum Sockets
 {
     PAIR("PAIR") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -37,6 +40,7 @@ public enum Sockets
         }
     },
     PUB("SUB", "XSUB") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -44,6 +48,7 @@ public enum Sockets
         }
     },
     SUB("PUB", "XPUB") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -51,12 +56,14 @@ public enum Sockets
         }
     },
     REQ("REP", "ROUTER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
             return new Req(parent, tid, sid);
         }
 
+        @Impure
         @Override
         public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
         {
@@ -64,6 +71,7 @@ public enum Sockets
         }
     },
     REP("REQ", "DEALER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -71,6 +79,7 @@ public enum Sockets
         }
     },
     DEALER("REP", "DEALER", "ROUTER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -78,6 +87,7 @@ public enum Sockets
         }
     },
     ROUTER("REQ", "DEALER", "ROUTER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -85,6 +95,7 @@ public enum Sockets
         }
     },
     PULL("PUSH") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -92,6 +103,7 @@ public enum Sockets
         }
     },
     PUSH("PULL") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -99,6 +111,7 @@ public enum Sockets
         }
     },
     XPUB("SUB", "XSUB") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -106,6 +119,7 @@ public enum Sockets
         }
     },
     XSUB("PUB", "XPUB") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -113,6 +127,7 @@ public enum Sockets
         }
     },
     STREAM {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -120,6 +135,7 @@ public enum Sockets
         }
     },
     SERVER("CLIENT") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -127,6 +143,7 @@ public enum Sockets
         }
     },
     CLIENT("SERVER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -134,12 +151,14 @@ public enum Sockets
         }
     },
     RADIO("DISH") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
             return new Radio(parent, tid, sid);
         }
 
+        @Impure
         @Override
         public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
         {
@@ -147,12 +166,14 @@ public enum Sockets
         }
     },
     DISH("RADIO") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
             return new Dish(parent, tid, sid);
         }
 
+        @Impure
         @Override
         public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
         {
@@ -160,6 +181,7 @@ public enum Sockets
         }
     },
     CHANNEL("CHANNEL") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -167,6 +189,7 @@ public enum Sockets
         }
     },
     PEER("PEER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -174,6 +197,7 @@ public enum Sockets
         }
     },
     RAW {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -181,6 +205,7 @@ public enum Sockets
         }
     },
     SCATTER("GATHER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -188,6 +213,7 @@ public enum Sockets
         }
     },
     GATHER("SCATTER") {
+        @Impure
         @Override
         SocketBase create(Ctx parent, int tid, int sid)
         {
@@ -199,14 +225,17 @@ public enum Sockets
 
     private final List<String> compatible;
 
+    @Impure
     Sockets(String... compatible)
     {
         this.compatible = Arrays.asList(compatible);
     }
 
     //  Create a socket of a specified type.
+    @Impure
     abstract SocketBase create(Ctx parent, int tid, int sid);
 
+    @Impure
     public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
     {
         if (options.canSendHelloMsg && options.helloMsg != null) {
@@ -217,27 +246,32 @@ public enum Sockets
         }
     }
 
+    @Impure
     public static SessionBase createSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
                                             Address addr)
     {
         return VALUES[options.type].create(ioThread, connect, socket, options, addr);
     }
 
+    @Impure
     public static SocketBase create(int socketType, Ctx parent, int tid, int sid)
     {
         return VALUES[socketType].create(parent, tid, sid);
     }
 
+    @Pure
     public static String name(int socketType)
     {
         return VALUES[socketType].name();
     }
 
+    @Pure
     public static Sockets fromType(int socketType)
     {
         return VALUES[socketType];
     }
 
+    @Pure
     public static boolean compatible(int self, String peer)
     {
         return VALUES[self].compatible.contains(peer);

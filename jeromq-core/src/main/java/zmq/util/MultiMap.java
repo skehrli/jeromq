@@ -1,5 +1,10 @@
 package zmq.util;
 
+import org.checkerframework.framework.qual.EnsuresQualifier;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,6 +21,7 @@ public final class MultiMap<K extends Comparable<? super K>, V>
     // sorts entries according to the natural order of the values
     private final class EntryComparator implements Comparator<Entry<V, K>>
     {
+        @Pure
         @Override
         public int compare(Entry<V, K> first, Entry<V, K> second)
         {
@@ -30,18 +36,22 @@ public final class MultiMap<K extends Comparable<? super K>, V>
     // inverse mapping to speed-up the process
     private final Map<V, K> inverse;
 
+    @Impure
     public MultiMap()
     {
         data = new HashMap<>();
         inverse = new HashMap<>();
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Impure
     public void clear()
     {
         data.clear();
         inverse.clear();
     }
 
+    @Impure
     public Collection<Entry<V, K>> entries()
     {
         List<Entry<V, K>> list = new ArrayList<>(inverse.entrySet());
@@ -49,23 +59,28 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return list;
     }
 
+    @SideEffectFree
     @Deprecated
     public Collection<V> values()
     {
         return inverse.keySet();
     }
 
-    public boolean contains(V value)
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Pure
+    public boolean contains(@Owning V value)
     {
         return inverse.containsKey(value);
     }
 
-    public K key(V value)
+    @Pure
+    public K key(@Owning V value)
     {
         return inverse.get(value);
     }
 
-    public V find(V copy)
+    @Pure
+    public V find(@Owning V copy)
     {
         K key = inverse.get(copy);
         if (key != null) {
@@ -75,7 +90,8 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return null;
     }
 
-    public boolean hasValues(K key)
+    @Pure
+    public boolean hasValues(@Owning K key)
     {
         List<V> list = data.get(key);
         if (list == null) {
@@ -84,17 +100,21 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return !list.isEmpty();
     }
 
+    @EnsuresQualifier(expression="this", qualifier=org.checkerframework.checker.collectionownership.qual.OwningCollectionBottom.class)
+    @Pure
     public boolean isEmpty()
     {
         return inverse.isEmpty();
     }
 
-    private List<V> getValues(K key)
+    @Impure
+    private List<V> getValues(@Owning K key)
     {
         return data.computeIfAbsent(key, k -> new ArrayList<>());
     }
 
-    public boolean insert(K key, V value)
+    @Impure
+    public boolean insert(@Owning K key, @Owning V value)
     {
         K old = inverse.get(value);
         if (old != null) {
@@ -111,7 +131,8 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return inserted;
     }
 
-    public Collection<V> remove(K key)
+    @Impure
+    public Collection<V> remove(@Owning K key)
     {
         List<V> removed = data.remove(key);
         if (removed != null) {
@@ -122,7 +143,8 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return removed;
     }
 
-    public boolean remove(V value)
+    @Impure
+    public boolean remove(@Owning V value)
     {
         K key = inverse.remove(value);
         if (key != null) {
@@ -131,7 +153,8 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return false;
     }
 
-    public boolean remove(K key, V value)
+    @Impure
+    public boolean remove(@Owning K key, @Owning V value)
     {
         boolean removed = removeData(key, value);
         if (removed) {
@@ -140,7 +163,8 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return removed;
     }
 
-    private boolean removeData(K key, V value)
+    @Impure
+    private boolean removeData(@Owning K key, @Owning V value)
     {
         boolean removed = false;
         List<V> list = data.get(key);
@@ -153,6 +177,7 @@ public final class MultiMap<K extends Comparable<? super K>, V>
         return removed;
     }
 
+    @SideEffectFree
     @Override
     public String toString()
     {

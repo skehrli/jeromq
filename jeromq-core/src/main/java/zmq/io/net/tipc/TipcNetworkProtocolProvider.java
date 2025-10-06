@@ -1,5 +1,7 @@
 package zmq.io.net.tipc;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.net.InetSocketAddress;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -18,6 +20,7 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
+    @Pure
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
@@ -25,6 +28,7 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return false;
     }
 
+    @Impure
     @Override
     public Listener getListener(IOThread ioThread, SocketBase socket,
                                 Options options)
@@ -32,6 +36,7 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return new TipcListener(ioThread, socket, options);
     }
 
+    @Pure
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
@@ -39,6 +44,7 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         return null;
     }
 
+    @Impure
     @Override
     public void startConnecting(Options options, IOThread ioThread,
                                 SessionBase session, Address<InetSocketAddress> addr,
@@ -49,6 +55,7 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
         launchChild.accept(connecter);
     }
 
+    @Pure
     @Override
     public boolean wantsIOThread()
     {

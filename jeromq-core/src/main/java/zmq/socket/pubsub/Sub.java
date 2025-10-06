@@ -1,5 +1,7 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -8,6 +10,7 @@ import zmq.ZMQ;
 
 public class Sub extends XSub
 {
+    @Impure
     public Sub(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -19,6 +22,7 @@ public class Sub extends XSub
         options.filter = true;
     }
 
+    @Impure
     @Override
     public boolean xsetsockopt(int option, Object optval)
     {
@@ -54,6 +58,7 @@ public class Sub extends XSub
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -62,6 +67,7 @@ public class Sub extends XSub
         throw new UnsupportedOperationException();
     }
 
+    @Pure
     @Override
     protected boolean xhasOut()
     {

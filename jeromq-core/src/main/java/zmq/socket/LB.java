@@ -1,5 +1,7 @@
 package zmq.socket;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +30,7 @@ public class LB
     //  True if we are dropping current message.
     private boolean dropping;
 
+    @SideEffectFree
     public LB()
     {
         active = 0;
@@ -38,12 +41,14 @@ public class LB
         pipes = new ArrayList<>();
     }
 
+    @Impure
     public void attach(Pipe pipe)
     {
         pipes.add(pipe);
         activated(pipe);
     }
 
+    @Impure
     public void terminated(Pipe pipe)
     {
         final int index = pipes.indexOf(pipe);
@@ -66,6 +71,7 @@ public class LB
         pipes.remove(pipe);
     }
 
+    @Impure
     public void activated(Pipe pipe)
     {
         //  Move the pipe to the list of active pipes.
@@ -73,6 +79,7 @@ public class LB
         active++;
     }
 
+    @Impure
     public boolean sendpipe(Msg msg, Errno errno, ValueReference<Pipe> pipe)
     {
         //  Drop the message if required. If we are at the end of the message
@@ -122,6 +129,7 @@ public class LB
         return true;
     }
 
+    @Impure
     public boolean hasOut()
     {
         //  If one part of the message was already written we can definitely

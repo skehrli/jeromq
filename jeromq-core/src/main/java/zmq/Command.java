@@ -1,4 +1,7 @@
 package zmq;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 //  This structure defines the commands that can be sent between threads.
 public class Command
@@ -62,11 +65,14 @@ public class Command
         CANCEL
     }
 
+    @SideEffectFree
+    @Impure
     Command(ZObject destination, Type type)
     {
         this(destination, type, null);
     }
 
+    @SideEffectFree
     Command(ZObject destination, Type type, Object arg)
     {
         this.destination = destination;
@@ -74,11 +80,14 @@ public class Command
         this.arg = arg;
     }
 
+    @Impure
     public final void process()
     {
         destination.processCommand(this);
     }
 
+    @Pure
+    @Impure
     @Override
     public String toString()
     {

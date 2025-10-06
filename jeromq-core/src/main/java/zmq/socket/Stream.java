@@ -1,5 +1,8 @@
 package zmq.socket;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +42,7 @@ public class Stream extends SocketBase
         private final Pipe    pipe;
         private boolean active;
 
+        @SideEffectFree
         public Outpipe(Pipe pipe, boolean active)
         {
             this.pipe = pipe;
@@ -59,6 +63,7 @@ public class Stream extends SocketBase
     //  algorithm. This value is the next ID to use (if not used already).
     private int nextRid;
 
+    @Impure
     public Stream(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -75,6 +80,7 @@ public class Stream extends SocketBase
         prefetchedMsg = new Msg();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean icanhasall, boolean isLocallyInitiated)
     {
@@ -84,6 +90,7 @@ public class Stream extends SocketBase
         fq.attach(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -95,12 +102,14 @@ public class Stream extends SocketBase
         }
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
@@ -116,6 +125,7 @@ public class Stream extends SocketBase
         out.active = true;
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -181,6 +191,7 @@ public class Stream extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xsetsockopt(int option, Object optval)
     {
@@ -194,6 +205,7 @@ public class Stream extends SocketBase
         }
     }
 
+    @Impure
     @Override
     public Msg xrecv()
     {
@@ -244,6 +256,7 @@ public class Stream extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
@@ -281,6 +294,7 @@ public class Stream extends SocketBase
         return true;
     }
 
+    @Pure
     @Override
     protected boolean xhasOut()
     {
@@ -290,6 +304,7 @@ public class Stream extends SocketBase
         return true;
     }
 
+    @Impure
     private void identifyPeer(Pipe pipe, boolean isLocallyInitiated)
     {
         //  Always assign identity for raw-socket

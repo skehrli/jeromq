@@ -1,5 +1,8 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
@@ -35,6 +38,7 @@ public class ZFrame
      * Creates an empty frame.
      * (Useful when reading frames from a 0MQ Socket)
      */
+    @SideEffectFree
     protected ZFrame()
     {
     }
@@ -45,6 +49,7 @@ public class ZFrame
      * @param data
      *          Data to copy into ZFrame object
      */
+    @SideEffectFree
     public ZFrame(byte[] data)
     {
         if (data != null) {
@@ -58,6 +63,7 @@ public class ZFrame
      * @param data
      *          String to copy into ZFrame object as bytes, decoded using {@link ZMQ#CHARSET}
      */
+    @SideEffectFree
     public ZFrame(String data)
     {
         if (data != null) {
@@ -70,6 +76,7 @@ public class ZFrame
      * Uses internal Msg class to access routingId
      * @param msg internal Msg class to copy into Zframe
      */
+    @Impure
     protected ZFrame(zmq.Msg msg)
     {
         if (msg == null) {
@@ -85,6 +92,7 @@ public class ZFrame
      * Else returns zero.
      * @return the routing ID
      */
+    @Pure
     public int getRoutingId()
     {
         return routingId;
@@ -95,6 +103,7 @@ public class ZFrame
      * ZMQ_SERVER socket.
      * @param routingId the routing ID
      */
+    @Impure
     public void setRoutingId(int routingId)
     {
         this.routingId = routingId;
@@ -104,6 +113,7 @@ public class ZFrame
      * Gets the group used for RADIO/DISH sockets.
      * @return the group name, or null.
      */
+    @Pure
     public String getGroup()
     {
         return group;
@@ -113,6 +123,7 @@ public class ZFrame
      * Sets the group used for RADIO/DISH sockets.
      * @param group the group name, or null to unset it.
      */
+    @Impure
     public void setGroup(String group)
     {
         this.group = group;
@@ -121,6 +132,7 @@ public class ZFrame
     /**
      * Destructor.
      */
+    @Impure
     public void destroy()
     {
         if (hasData()) {
@@ -131,11 +143,14 @@ public class ZFrame
     /**
      * @return the data
      */
+    @Pure
     public byte[] getData()
     {
         return data;
     }
 
+    @SideEffectFree
+    @Impure
     public String getString(Charset charset)
     {
         if (!hasData()) {
@@ -147,6 +162,7 @@ public class ZFrame
     /**
      * @return More flag, true if last read had MORE message parts to come
      */
+    @Pure
     public boolean hasMore()
     {
         return more;
@@ -157,6 +173,8 @@ public class ZFrame
      * @return
      *          Number of bytes in frame data, else 0
      */
+    @Pure
+    @Impure
     public int size()
     {
         if (hasData()) {
@@ -172,6 +190,7 @@ public class ZFrame
      * @return
      *          True if frame contains data
      */
+    @Pure
     public boolean hasData()
     {
         return data != null;
@@ -186,6 +205,7 @@ public class ZFrame
      * @return
      *          True if success, else False
      */
+    @Impure
     public boolean send(Socket socket, int flags)
     {
         Utils.checkArgument(socket != null, "socket parameter must be set");
@@ -215,6 +235,7 @@ public class ZFrame
      * @return
      *          True if success, else False
      */
+    @Impure
     public boolean sendAndKeep(Socket socket, int flags)
     {
         return send(socket, flags);
@@ -229,6 +250,7 @@ public class ZFrame
      * @return
      *          True if success, else False
      */
+    @Impure
     public boolean sendAndKeep(Socket socket)
     {
         return sendAndKeep(socket, 0);
@@ -244,6 +266,7 @@ public class ZFrame
      * @return
      *          True if success, else False
      */
+    @Impure
     public boolean sendAndDestroy(Socket socket, int flags)
     {
         boolean ret = send(socket, flags);
@@ -262,6 +285,7 @@ public class ZFrame
      * @return
      *          True if success, else False
      */
+    @Impure
     public boolean sendAndDestroy(Socket socket)
     {
         return sendAndDestroy(socket, 0);
@@ -272,6 +296,8 @@ public class ZFrame
      * @return
      *          Duplicate of frame; message contents copied into new byte array
      */
+    @SideEffectFree
+    @Impure
     public ZFrame duplicate()
     {
         return new ZFrame(this.data);
@@ -284,6 +310,8 @@ public class ZFrame
      * @return
      *          True if both ZFrames have same byte-identical data, else false
      */
+    @Pure
+    @Impure
     public boolean hasSameData(ZFrame other)
     {
         if (other == null) {
@@ -301,6 +329,7 @@ public class ZFrame
      * @param data
      *          New byte array contents for frame
      */
+    @Impure
     public void reset(String data)
     {
         this.data = data.getBytes(ZMQ.CHARSET);
@@ -311,6 +340,7 @@ public class ZFrame
      * @param data
      *          New byte array contents for frame
      */
+    @Impure
     public void reset(byte[] data)
     {
         this.data = data;
@@ -319,6 +349,7 @@ public class ZFrame
     /**
      * @return frame data as a printable hex string
      */
+    @Impure
     public String strhex()
     {
         return ZData.strhex(data);
@@ -332,11 +363,14 @@ public class ZFrame
      * @return
      *          True if frame body data matches given string
      */
+    @SideEffectFree
+    @Impure
     public boolean streq(String str)
     {
         return ZData.streq(data, str);
     }
 
+    @Pure
     @Override
     public boolean equals(Object o)
     {
@@ -350,6 +384,7 @@ public class ZFrame
         return Arrays.equals(data, zFrame.data);
     }
 
+    @Pure
     @Override
     public int hashCode()
     {
@@ -361,6 +396,7 @@ public class ZFrame
      * @return
      *          A text string or hex-encoded string if data contains any non-printable ASCII characters
      */
+    @Impure
     @Override
     public String toString()
     {
@@ -377,6 +413,7 @@ public class ZFrame
      * @return
      *              received frame, else null
      */
+    @Impure
     public static ZFrame recvFrame(Socket socket)
     {
         return ZFrame.recvFrame(socket, 0);
@@ -392,6 +429,7 @@ public class ZFrame
      * @return
      *              received frame, else null
      */
+    @Impure
     public static ZFrame recvFrame(Socket socket, int flags)
     {
         final SocketBase base = socket.base();
@@ -406,6 +444,7 @@ public class ZFrame
         return frame;
     }
 
+    @Impure
     public void print(String prefix)
     {
         ZData.print(System.out, prefix, getData(), size());

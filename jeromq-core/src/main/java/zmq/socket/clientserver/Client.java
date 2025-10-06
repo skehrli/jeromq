@@ -1,5 +1,7 @@
 package zmq.socket.clientserver;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -18,6 +20,7 @@ public class Client extends SocketBase
     private final LB lb;
 
     //  Holds the prefetched message.
+    @Impure
     public Client(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -30,6 +33,7 @@ public class Client extends SocketBase
         lb = new LB();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -39,6 +43,7 @@ public class Client extends SocketBase
         lb.attach(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -50,6 +55,7 @@ public class Client extends SocketBase
         return lb.sendpipe(msg, errno, null);
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -73,36 +79,43 @@ public class Client extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return fq.hasIn();
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {
         return lb.hasOut();
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         lb.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {

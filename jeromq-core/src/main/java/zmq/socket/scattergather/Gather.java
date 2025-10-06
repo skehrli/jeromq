@@ -1,5 +1,7 @@
 package zmq.socket.scattergather;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -14,6 +16,7 @@ public class Gather extends SocketBase
     private final FQ fq;
 
     //  Holds the prefetched message.
+    @Impure
     public Gather(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid, true);
@@ -23,6 +26,7 @@ public class Gather extends SocketBase
         fq = new FQ();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -31,6 +35,7 @@ public class Gather extends SocketBase
         fq.attach(pipe);
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -54,24 +59,29 @@ public class Gather extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return fq.hasIn();
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
         fq.activated(pipe);
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {

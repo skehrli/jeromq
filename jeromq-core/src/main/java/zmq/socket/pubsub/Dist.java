@@ -1,5 +1,8 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +33,7 @@ public class Dist
     //  True if last we are in the middle of a multipart message.
     private boolean more;
 
+    @SideEffectFree
     public Dist()
     {
         matching = 0;
@@ -40,6 +44,7 @@ public class Dist
     }
 
     //  Adds the pipe to the distributor object.
+    @Impure
     public void attach(Pipe pipe)
     {
         //  If we are in the middle of sending a message, we'll add new pipe
@@ -59,6 +64,7 @@ public class Dist
 
     //  Mark the pipe as matching. Subsequent call to sendToMatching
     //  will send message also to this pipe.
+    @Impure
     public void match(Pipe pipe)
     {
         int idx = pipes.indexOf(pipe);
@@ -78,12 +84,14 @@ public class Dist
     }
 
     //  Mark all pipes as non-matching.
+    @Impure
     public void unmatch()
     {
         matching = 0;
     }
 
     //  Removes the pipe from the distributor object.
+    @Impure
     public void terminated(Pipe pipe)
     {
         //  Remove the pipe from the list; adjust number of matching, active and/or
@@ -104,6 +112,7 @@ public class Dist
     }
 
     //  Activates pipe that have previously reached high watermark.
+    @Impure
     public void activated(Pipe pipe)
     {
         //  Move the pipe from passive to eligible state.
@@ -121,6 +130,7 @@ public class Dist
     }
 
     //  Send the message to all the outbound pipes.
+    @Impure
     public boolean sendToAll(Msg msg)
     {
         matching = active;
@@ -128,6 +138,7 @@ public class Dist
     }
 
     //  Send the message to the matching outbound pipes.
+    @Impure
     public boolean sendToMatching(Msg msg)
     {
         //  Is this end of a multipart message?
@@ -147,6 +158,7 @@ public class Dist
     }
 
     //  Put the message to all active pipes.
+    @Impure
     private void distribute(Msg msg)
     {
         //  If there are no matching pipes available, simply drop the message.
@@ -164,6 +176,7 @@ public class Dist
         }
     }
 
+    @Pure
     public boolean hasOut()
     {
         return true;
@@ -171,6 +184,7 @@ public class Dist
 
     //  Write the message to the pipe. Make the pipe inactive if writing
     //  fails. In such a case false is returned.
+    @Impure
     private boolean write(Pipe pipe, Msg msg)
     {
         if (!pipe.write(msg)) {
@@ -188,6 +202,8 @@ public class Dist
         return true;
     }
 
+    @Pure
+    @Impure
     public boolean checkHwm()
     {
         for (int idx = 0; idx < matching; ++idx) {
@@ -198,16 +214,19 @@ public class Dist
         return true;
     }
 
+    @Pure
     int active()
     {
         return active;
     }
 
+    @Pure
     int eligible()
     {
         return eligible;
     }
 
+    @Pure
     int matching()
     {
         return matching;

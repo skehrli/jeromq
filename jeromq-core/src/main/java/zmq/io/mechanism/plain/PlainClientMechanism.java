@@ -1,5 +1,8 @@
 package zmq.io.mechanism.plain;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -24,12 +27,15 @@ public class PlainClientMechanism extends Mechanism
 
     private State state;
 
+    @SideEffectFree
+    @Impure
     public PlainClientMechanism(SessionBase session, Options options)
     {
         super(session, null, options);
         this.state = State.SENDING_HELLO;
     }
 
+    @Impure
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
@@ -55,6 +61,7 @@ public class PlainClientMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public int processHandshakeCommand(Msg msg)
     {
@@ -78,6 +85,7 @@ public class PlainClientMechanism extends Mechanism
         return rc;
     }
 
+    @Pure
     @Override
     public Status status()
     {
@@ -92,12 +100,14 @@ public class PlainClientMechanism extends Mechanism
         }
     }
 
+    @Pure
     @Override
     public int zapMsgAvailable()
     {
         return 0;
     }
 
+    @Impure
     private int produceHello(Msg msg)
     {
         String plainUsername = options.plainUsername;
@@ -113,6 +123,7 @@ public class PlainClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int processWelcome(Msg msg)
     {
         if (state != State.WAITING_FOR_WELCOME) {
@@ -125,6 +136,7 @@ public class PlainClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceInitiate(Msg msg)
     {
         //  Add mechanism string
@@ -142,6 +154,7 @@ public class PlainClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int processReady(Msg msg)
     {
         if (state != State.WAITING_FOR_READY) {
@@ -155,6 +168,7 @@ public class PlainClientMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     private int processError(Msg msg)
     {
         if (state != State.WAITING_FOR_WELCOME && state != State.WAITING_FOR_READY) {

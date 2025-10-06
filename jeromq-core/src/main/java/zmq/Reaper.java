@@ -1,5 +1,11 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
@@ -8,9 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import zmq.poll.IPollEvents;
 import zmq.poll.Poller;
 
+@InheritableMustCall("close")
 final class Reaper extends ZObject implements IPollEvents, Closeable
 {
     //  Reaper thread accesses incoming commands via this mailbox.
+    @Owning
     private final Mailbox mailbox;
 
     //  Handle associated with mailbox' file descriptor.
@@ -25,6 +33,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
     //  If true, we were already asked to terminate.
     private final AtomicBoolean terminating = new AtomicBoolean();
 
+    @Impure
     Reaper(Ctx ctx, int tid)
     {
         super(ctx, tid);
@@ -39,6 +48,8 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         poller.setPollIn(mailboxHandle);
     }
 
+    @EnsuresCalledMethods(value="this.mailbox", methods="close")
+    @Impure
     @Override
     public void close() throws IOException
     {
@@ -46,16 +57,20 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         mailbox.close();
     }
 
+    @NotOwning
+    @Pure
     Mailbox getMailbox()
     {
         return mailbox;
     }
 
+    @Impure
     void start()
     {
         poller.start();
     }
 
+    @Impure
     void stop()
     {
         if (!terminating.get()) {
@@ -63,6 +78,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         }
     }
 
+    @Impure
     @Override
     public void inEvent()
     {
@@ -78,6 +94,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         }
     }
 
+    @Impure
     @Override
     protected void processStop()
     {
@@ -89,6 +106,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         }
     }
 
+    @Impure
     @Override
     protected void processReap(SocketBase socket)
     {
@@ -98,6 +116,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         socket.startReaping(poller);
     }
 
+    @Impure
     @Override
     protected void processReaped()
     {
@@ -110,6 +129,7 @@ final class Reaper extends ZObject implements IPollEvents, Closeable
         }
     }
 
+    @Impure
     private void finishTerminating()
     {
         sendDone();

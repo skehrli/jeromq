@@ -1,5 +1,6 @@
 package zmq.io.net.tcp;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -13,12 +14,14 @@ import zmq.io.net.StandardProtocolFamily;
 
 public class TcpConnecter extends AbstractSocketConnecter<InetSocketAddress>
 {
+    @Impure
     public TcpConnecter(IOThread ioThread, SessionBase session, Options options, Address<InetSocketAddress> addr,
             boolean delayedStart)
     {
         super(ioThread, session, options, addr, delayedStart);
     }
 
+    @Impure
     @Override
     protected SocketChannel openClient(Address.IZAddress<InetSocketAddress> address) throws IOException
     {
@@ -55,6 +58,7 @@ public class TcpConnecter extends AbstractSocketConnecter<InetSocketAddress>
         return fd;
     }
 
+    @Impure
     @Override
     protected void tuneConnectedChannel(SocketChannel channel) throws IOException
     {

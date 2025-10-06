@@ -1,5 +1,9 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -17,17 +21,20 @@ public class Msg
     {
         private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+        @Impure
         public Builder()
         {
             super();
         }
 
+        @Pure
         @Override
         public int size()
         {
             return out.size();
         }
 
+        @Impure
         @Override
         protected Msg put(int index, byte b)
         {
@@ -35,6 +42,7 @@ public class Msg
             return this;
         }
 
+        @Impure
         @Override
         public Msg put(byte[] src, int off, int len)
         {
@@ -46,6 +54,7 @@ public class Msg
             return this;
         }
 
+        @Impure
         @Override
         public Msg put(ByteBuffer src, int off, int len)
         {
@@ -59,6 +68,7 @@ public class Msg
             return this;
         }
 
+        @Impure
         @Override
         public Msg putShortString(String data)
         {
@@ -73,12 +83,14 @@ public class Msg
             return this;
         }
 
+        @Impure
         @Override
         public void setFlags(int flags)
         {
             super.setFlags(flags);
         }
 
+        @Impure
         public Msg build()
         {
             return new Msg(this, out);
@@ -119,11 +131,13 @@ public class Msg
     private int routingId;
     private String group;
 
+    @Impure
     public Msg()
     {
         this(0);
     }
 
+    @Impure
     public Msg(int capacity)
     {
         this.type = Type.DATA;
@@ -132,6 +146,7 @@ public class Msg
         this.buf = ByteBuffer.wrap(new byte[capacity]).order(ByteOrder.BIG_ENDIAN);
     }
 
+    @Impure
     public Msg(byte[] src)
     {
         if (src == null) {
@@ -143,6 +158,7 @@ public class Msg
         this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
     }
 
+    @Impure
     public Msg(final ByteBuffer src)
     {
         if (src == null) {
@@ -154,6 +170,7 @@ public class Msg
         this.size = buf.remaining();
     }
 
+    @Impure
     public Msg(final Msg m)
     {
         if (m == null) {
@@ -165,6 +182,7 @@ public class Msg
         this.buf = m.buf != null ? m.buf.duplicate() : null;
     }
 
+    @Impure
     private Msg(Msg src, ByteArrayOutputStream out)
     {
         this(ByteBuffer.wrap(out.toByteArray()));
@@ -172,56 +190,67 @@ public class Msg
         this.flags = src.flags;
     }
 
+    @Pure
     public boolean isIdentity()
     {
         return (flags & IDENTITY) == IDENTITY;
     }
 
+    @Pure
     public boolean isDelimiter()
     {
         return type == Type.DELIMITER;
     }
 
+    @Pure
     public boolean isJoin()
     {
         return type == Type.JOIN;
     }
 
+    @Pure
     public boolean isLeave()
     {
         return type == Type.LEAVE;
     }
 
+    @Pure
     public boolean check()
     {
         return true; // type >= TYPE_MIN && type <= TYPE_MAX;
     }
 
+    @Pure
     public int flags()
     {
         return flags;
     }
 
+    @Pure
     public boolean hasMore()
     {
         return (flags & MORE) > 0;
     }
 
+    @Pure
     public boolean isCommand()
     {
         return (flags & COMMAND) == COMMAND;
     }
 
+    @Pure
     public boolean isCredential()
     {
         return (flags & CREDENTIAL) == CREDENTIAL;
     }
 
+    @Impure
     public void setFlags(int flags)
     {
         this.flags |= flags;
     }
 
+    @Impure
     public void initDelimiter()
     {
         type = Type.DELIMITER;
@@ -229,6 +258,7 @@ public class Msg
         flags = 0;
     }
 
+    @Impure
     public void initJoin()
     {
         type = Type.JOIN;
@@ -236,6 +266,7 @@ public class Msg
         flags = 0;
     }
 
+    @Impure
     public void initLeave()
     {
         type = Type.LEAVE;
@@ -251,6 +282,7 @@ public class Msg
      *
      * @return the message data.
      */
+    @Impure
     public byte[] data()
     {
         if (buf.hasArray()) {
@@ -276,79 +308,95 @@ public class Msg
         }
     }
 
+    @Impure
     public ByteBuffer buf()
     {
         return buf.duplicate();
     }
 
+    @Pure
     public int size()
     {
         return size;
     }
 
+    @Impure
     public void resetFlags(int f)
     {
         flags = flags & ~f;
     }
 
+    @Impure
     public void setFd(SocketChannel fileDesc)
     {
         this.fileDesc = fileDesc;
     }
 
     // TODO V4 use the source channel
+    @NotOwning
+    @Pure
     public SocketChannel fd()
     {
         return fileDesc;
     }
 
+    @Pure
     public Metadata getMetadata()
     {
         return metadata;
     }
 
+    @Impure
     public Msg setMetadata(Metadata metadata)
     {
         this.metadata = metadata;
         return this;
     }
 
+    @Impure
     public void resetMetadata()
     {
         setMetadata(null);
     }
 
+    @Impure
     public byte get()
     {
         return get(readIndex++);
     }
 
+    @Impure
     public byte get(int index)
     {
         return buf.get(index);
     }
 
+    @Impure
     public Msg put(byte b)
     {
         return put(writeIndex++, b);
     }
 
+    @Impure
     public Msg put(int b)
     {
         return put(writeIndex++, (byte) b);
     }
 
+    @Impure
     protected Msg put(int index, byte b)
     {
         buf.put(index, b);
         return this;
     }
 
+    @Impure
     public Msg put(byte[] src)
     {
         return put(src, 0, src.length);
     }
 
+    @Impure
     public Msg put(byte[] src, int off, int len)
     {
         if (src == null) {
@@ -361,6 +409,7 @@ public class Msg
         return this;
     }
 
+    @Impure
     public Msg put(ByteBuffer src, int off, int len)
     {
         if (src == null) {
@@ -374,6 +423,7 @@ public class Msg
         return this;
     }
 
+    @Impure
     public Msg put(ByteBuffer src)
     {
         ByteBuffer dup = buf.duplicate();
@@ -383,6 +433,7 @@ public class Msg
         return this;
     }
 
+    @Impure
     public int getBytes(int index, byte[] dst, int off, int len)
     {
         int count = Math.min(len, size - index);
@@ -399,6 +450,7 @@ public class Msg
         return count;
     }
 
+    @Impure
     public int getBytes(int index, ByteBuffer bb, int len)
     {
         ByteBuffer dup = buf.duplicate();
@@ -409,37 +461,44 @@ public class Msg
         return count;
     }
 
+    @SideEffectFree
     @Override
     public String toString()
     {
         return String.format("#zmq.Msg{type=%s, size=%s, flags=%s}", type, size, flags);
     }
 
+    @Pure
     protected final int getWriteIndex()
     {
         return writeIndex;
     }
 
+    @Impure
     protected final void setWriteIndex(int writeIndex)
     {
         this.writeIndex = writeIndex;
     }
 
+    @Impure
     public long getLong(int offset)
     {
         return Wire.getUInt64(buf, offset);
     }
 
+    @Impure
     public int getInt(int offset)
     {
         return Wire.getUInt32(buf, offset);
     }
 
+    @Impure
     public int getShort(int offset)
     {
         return Wire.getUInt16(buf, offset);
     }
 
+    @Impure
     public void transfer(ByteBuffer destination, int srcOffset, int srcLength)
     {
         int position = buf.position();
@@ -458,6 +517,7 @@ public class Msg
      * @param data a string shorter than 256 characters. If null, defaults to a no-op.
      * @return the same message.
      */
+    @Impure
     public Msg putShortString(String data)
     {
         if (data == null) {
@@ -474,6 +534,7 @@ public class Msg
     * SERVER socket.
     * @return the routing id
     * */
+    @Pure
     public int getRoutingId()
     {
         return routingId;
@@ -485,6 +546,7 @@ public class Msg
      * @param routingId the routing id
      * @return true if successfully set the routing id.
      */
+    @Impure
     public boolean setRoutingId(int routingId)
     {
         if (routingId != 0) {
@@ -499,6 +561,7 @@ public class Msg
      * Retrieve the group for RADIO/DISH sockets
      * @return the group.
      */
+    @Pure
     public String getGroup()
     {
         return group;
@@ -509,6 +572,7 @@ public class Msg
      * @param group
      * @return true if successfully set the group.
      */
+    @Impure
     public boolean setGroup(String group)
     {
         if (group.length() > MAX_GROUP_LENGTH) {
@@ -519,6 +583,7 @@ public class Msg
         return true;
     }
 
+    @Impure
     public void resetRoutingId()
     {
         routingId = 0;

@@ -1,5 +1,8 @@
 package zmq.util;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.Arrays;
 
 import zmq.Msg;
@@ -8,11 +11,14 @@ public class Blob
 {
     private final byte[] buf;
 
+    @SideEffectFree
     private Blob(byte[] data)
     {
         buf = data;
     }
 
+    @SideEffectFree
+    @Impure
     private static Blob createBlob(byte[] data, boolean copy)
     {
         if (copy) {
@@ -25,26 +31,32 @@ public class Blob
         }
     }
 
+    @Impure
     public static Blob createBlob(Msg msg)
     {
         return createBlob(msg.data(), true);
     }
 
+    @SideEffectFree
+    @Impure
     public static Blob createBlob(byte[] data)
     {
         return createBlob(data, false);
     }
 
+    @Pure
     public int size()
     {
         return buf.length;
     }
 
+    @Pure
     public byte[] data()
     {
         return buf;
     }
 
+    @Pure
     @Override
     public boolean equals(Object t)
     {
@@ -54,6 +66,7 @@ public class Blob
         return false;
     }
 
+    @Pure
     @Override
     public int hashCode()
     {

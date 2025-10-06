@@ -1,5 +1,7 @@
 package zmq.io.mechanism;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -26,6 +28,7 @@ class NullMechanism extends Mechanism
     private boolean zapRequestSent;
     private boolean zapReplyReceived;
 
+    @Impure
     NullMechanism(SessionBase session, Address peerAddress, Options options)
     {
         super(session, peerAddress, options);
@@ -37,6 +40,7 @@ class NullMechanism extends Mechanism
         }
     }
 
+    @Impure
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
@@ -83,6 +87,7 @@ class NullMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     @Override
     public int processHandshakeCommand(Msg msg)
     {
@@ -106,18 +111,21 @@ class NullMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     private int processReadyCommand(Msg msg)
     {
         readyCommandReceived = true;
         return parseMetadata(msg, 6, false);
     }
 
+    @Impure
     private int processErrorCommand(Msg msg)
     {
         errorCommandReceived = true;
         return parseErrorMessage(msg);
     }
 
+    @Impure
     @Override
     public int zapMsgAvailable()
     {
@@ -132,6 +140,7 @@ class NullMechanism extends Mechanism
         return rc;
     }
 
+    @Pure
     @Override
     public Status status()
     {

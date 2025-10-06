@@ -1,5 +1,9 @@
 package zmq.io.net;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -29,6 +33,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
 
     private final IOObject ioObject;
 
+    @Impure
     public AbstractSocketListener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, socket, options);
@@ -37,16 +42,21 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         fd = null;
     }
 
+    @NotOwning
+    @Pure
     protected ServerSocketChannel getFd()
     {
         return this.fd;
     }
 
+    @NotOwning
+    @Pure
     protected A getZAddress()
     {
         return this.address;
     }
 
+    @Impure
     @Override
     public void destroy()
     {
@@ -55,6 +65,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         ioObject.unplug();
     }
 
+    @Impure
     @Override
     protected void processPlug()
     {
@@ -64,6 +75,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         ioObject.setPollAccept(handle);
     }
 
+    @Impure
     @Override
     protected void processTerm(int linger)
     {
@@ -73,6 +85,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         super.processTerm(linger);
     }
 
+    @Impure
     @Override
     public void acceptEvent()
     {
@@ -124,6 +137,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
     }
 
     //  Close the listening socket.
+    @Impure
     private void close()
     {
         assert (fd != null);
@@ -138,9 +152,11 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         fd = null;
     }
 
+    @Impure
     protected abstract void closeServerChannel(ServerSocketChannel fd) throws IOException;
 
-    protected boolean setZAddress(A address)
+    @Impure
+    protected boolean setZAddress(@Owning A address)
     {
         this.address = address;
         endpoint = address.toString();
@@ -162,18 +178,23 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         return true;
     }
 
+    @Impure
     protected abstract ServerSocketChannel openServer(A address) throws IOException;
 
+    @Impure
     protected abstract void bindServer(ServerSocketChannel fd, A address) throws IOException;
 
     //  Accept the new connection. Returns the file descriptor of the
     //  newly created connection. The function may throw IOException
     //  if the connection was dropped while waiting in the listen backlog
     //  or was denied because of accept filters.
+    @Impure
     protected abstract SocketChannel accept(ServerSocketChannel fd) throws IOException;
 
+    @Impure
     protected abstract void tuneAcceptedChannel(SocketChannel channel) throws IOException;
 
+    @Impure
     @Override
     public String toString()
     {

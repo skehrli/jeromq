@@ -1,5 +1,8 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -62,6 +65,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
 
     private final IOObject ioObject;
 
+    @Impure
     public SessionBase(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
     {
         super(ioThread, options);
@@ -81,6 +85,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         terminatingPipes = new HashSet<>();
     }
 
+    @Impure
     @Override
     public void destroy()
     {
@@ -101,6 +106,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
     }
 
     //  To be used once only, when creating the session.
+    @Impure
     public void attachPipe(Pipe pipe)
     {
         assert (!isTerminating());
@@ -110,6 +116,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         this.pipe.setEventSink(this);
     }
 
+    @Impure
     protected Msg pullMsg()
     {
         if (pipe == null) {
@@ -126,6 +133,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
 
     }
 
+    @Impure
     protected boolean pushMsg(Msg msg)
     {
         if (msg.isCommand()) {
@@ -138,6 +146,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         return false;
     }
 
+    @Impure
     public Msg readZapMsg()
     {
         if (zapPipe == null) {
@@ -151,6 +160,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         return msg;
     }
 
+    @Impure
     public boolean writeZapMsg(Msg msg)
     {
         if (zapPipe == null) {
@@ -165,10 +175,12 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         return true;
     }
 
+    @Impure
     protected void reset()
     {
     }
 
+    @Impure
     public void flush()
     {
         if (pipe != null) {
@@ -178,6 +190,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
 
     //  Remove any half processed messages. Flush unflushed messages.
     //  Call this function when engine disconnect to get rid of leftovers.
+    @Impure
     private void cleanPipes()
     {
         assert (pipe != null);
@@ -197,6 +210,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void pipeTerminated(Pipe pipe)
     {
@@ -235,6 +249,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void readActivated(Pipe pipe)
     {
@@ -256,6 +271,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void writeActivated(Pipe pipe)
     {
@@ -270,6 +286,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @SideEffectFree
     @Override
     public void hiccuped(Pipe pipe)
     {
@@ -279,11 +296,13 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
 
     }
 
+    @Pure
     public SocketBase getSocket()
     {
         return socket;
     }
 
+    @Impure
     @Override
     protected void processPlug()
     {
@@ -293,6 +312,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     public int zapConnect()
     {
         // Session might be reused with zap connexion already established, don't panic
@@ -333,11 +353,13 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         return 0;
     }
 
+    @Pure
     protected boolean zapEnabled()
     {
         return options.mechanism != Mechanisms.NULL || (options.zapDomain != null && !options.zapDomain.isEmpty());
     }
 
+    @Impure
     @Override
     protected void processAttach(IEngine engine)
     {
@@ -370,6 +392,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         this.engine.plug(ioThread, this);
     }
 
+    @Impure
     public void engineError(boolean handshaked, ErrorReason reason)
     {
         //  Engine is dead. Let's forget about it.
@@ -418,6 +441,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     @Override
     protected void processTerm(int linger)
     {
@@ -460,6 +484,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void timerEvent(int id)
     {
@@ -473,6 +498,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         pipe.terminate(false);
     }
 
+    @Impure
     private void reconnect()
     {
         // TODO V4 -        //  Transient session self-destructs after peer disconnects. ?
@@ -500,6 +526,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         }
     }
 
+    @Impure
     private void startConnecting(boolean wait)
     {
         assert (active);
@@ -519,17 +546,21 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
         protocol.startConnecting(options, ioThread, this, addr, wait, this::launchChild, null);
     }
 
+    @Pure
+    @Impure
     public String getEndpoint()
     {
         return engine.getEndPoint();
     }
 
+    @Impure
     @Override
     public String toString()
     {
         return getClass().getSimpleName() + "-" + socket;
     }
 
+    @Impure
     @Override
     public final void incSeqnum()
     {

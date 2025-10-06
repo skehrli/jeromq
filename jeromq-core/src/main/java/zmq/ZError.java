@@ -1,5 +1,8 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.net.SocketException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
@@ -9,6 +12,7 @@ import org.zeromq.UncheckedZMQException;
 
 public class ZError
 {
+    @SideEffectFree
     private ZError()
     {
     }
@@ -17,6 +21,8 @@ public class ZError
     {
         private static final long serialVersionUID = -4404921838608052956L;
 
+        @SideEffectFree
+        @Impure
         public CtxTerminatedException()
         {
             super();
@@ -27,16 +33,22 @@ public class ZError
     {
         private static final long serialVersionUID = -4404921838608052955L;
 
+        @SideEffectFree
+        @Impure
         public InstantiationException(Throwable cause)
         {
             super(cause);
         }
 
+        @SideEffectFree
+        @Impure
         public InstantiationException(String message, Throwable cause)
         {
             super(message, cause);
         }
 
+        @SideEffectFree
+        @Impure
         public InstantiationException(String message)
         {
             super(message);
@@ -47,6 +59,8 @@ public class ZError
     {
         private static final long serialVersionUID = 9202470691157986262L;
 
+        @SideEffectFree
+        @Impure
         public IOException(java.io.IOException e)
         {
             super(e);
@@ -95,6 +109,7 @@ public class ZError
 
     public static final int EPROTO = ZMQ_HAUSNUMERO + 108;
 
+    @Pure
     public static int exccode(java.io.IOException e)
     {
         if (e instanceof SocketException) {
@@ -111,6 +126,8 @@ public class ZError
         }
     }
 
+    @Pure
+    @Impure
     public static String toString(int code)
     {
         return Error.findByCode(code).getMessage();

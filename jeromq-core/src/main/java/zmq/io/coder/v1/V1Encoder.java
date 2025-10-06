@@ -1,5 +1,6 @@
 package zmq.io.coder.v1;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -12,6 +13,7 @@ public class V1Encoder extends Encoder
 {
     private final ByteBuffer tmpbufWrap;
 
+    @Impure
     public V1Encoder(Errno errno, int bufsize)
     {
         super(errno, bufsize);
@@ -21,6 +23,7 @@ public class V1Encoder extends Encoder
         initStep(messageReady, true);
     }
 
+    @Impure
     @Override
     protected void sizeReady()
     {
@@ -28,6 +31,7 @@ public class V1Encoder extends Encoder
         nextStep(inProgress.buf(), inProgress.size(), messageReady, true);
     }
 
+    @Impure
     @Override
     protected void messageReady()
     {

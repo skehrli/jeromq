@@ -1,5 +1,6 @@
 package zmq.io.net.ipc;
 
+import org.checkerframework.dataflow.qual.Impure;
 import java.net.InetSocketAddress;
 
 import zmq.Options;
@@ -12,6 +13,7 @@ public class IpcListener extends TcpListener
 {
     private IpcAddress address;
 
+    @Impure
     public IpcListener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, socket, options);
@@ -19,6 +21,7 @@ public class IpcListener extends TcpListener
     }
 
     // Get the bound address for use with wildcards
+    @Impure
     @Override
     public String getAddress()
     {
@@ -31,6 +34,7 @@ public class IpcListener extends TcpListener
     }
 
     //  Set address to listen on.
+    @Impure
     @Override
     public boolean setAddress(String addr)
     {

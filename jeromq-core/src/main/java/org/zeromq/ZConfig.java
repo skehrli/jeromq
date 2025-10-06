@@ -1,5 +1,8 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -77,6 +80,7 @@ public class ZConfig
 {
     private interface IVisitor
     {
+        @SideEffectFree
         void handleNode(ZConfig node, int level) throws IOException;
     }
 
@@ -90,6 +94,7 @@ public class ZConfig
 
     private String value;
 
+    @Impure
     public ZConfig(String name, ZConfig parent)
     {
         this.name = name;
@@ -98,11 +103,13 @@ public class ZConfig
         }
     }
 
+    @Pure
     public ZConfig getChild(String name)
     {
         return children.get(name);
     }
 
+    @Impure
     public Map<String, String> getValues()
     {
         Map<String, String> values = new HashMap<>();
@@ -110,6 +117,7 @@ public class ZConfig
         return values;
     }
 
+    @Impure
     private void fillValues(String prefix, Map<String, String> values)
     {
         for (Entry<String, ZConfig> entry : children.entrySet()) {
@@ -123,16 +131,20 @@ public class ZConfig
         }
     }
 
+    @Pure
     public String getName()
     {
         return this.name;
     }
 
+    @SideEffectFree
+    @Impure
     public String getValue(String path)
     {
         return getValue(path, null);
     }
 
+    @SideEffectFree
     public String getValue(String path, String defaultValue)
     {
         String[] pathElements = path.split("/");
@@ -154,6 +166,7 @@ public class ZConfig
      * @param path
      * @return true if value-path exists
      */
+    @SideEffectFree
     public boolean pathExists(String path)
     {
         String[] pathElements = path.split("/");
@@ -174,6 +187,7 @@ public class ZConfig
      * add comment
      * @param comment
      */
+    @Impure
     public void addComment(String comment)
     {
         comments.add(comment);
@@ -183,6 +197,7 @@ public class ZConfig
      * @param path
      * @param value set value of config item
      */
+    @Impure
     public ZConfig putValue(String path, String value)
     {
         String[] pathElements = path.split("/");
@@ -202,6 +217,7 @@ public class ZConfig
         return current;
     }
 
+    @Impure
     public void putValues(ZConfig src)
     {
         for (Entry<String, String> entry : src.getValues().entrySet()) {
@@ -209,6 +225,7 @@ public class ZConfig
         }
     }
 
+    @Impure
     private void visit(ZConfig startNode, IVisitor handler, int level) throws IOException
     {
         handler.handleNode(startNode, level);
@@ -225,6 +242,7 @@ public class ZConfig
      * @return the saved file or null if dumped to the standard output
      * @throws IOException if unable to save the file.
      */
+    @Impure
     public File save(String filename) throws IOException
     {
         if ("-".equals(filename)) {
@@ -250,6 +268,7 @@ public class ZConfig
         }
     }
 
+    @Impure
     public void save(final Writer writer) throws IOException
     {
         visit(this, (node, level) -> {
@@ -274,6 +293,7 @@ public class ZConfig
         }, 0);
     }
 
+    @Impure
     public static ZConfig load(String filename) throws IOException
     {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -295,6 +315,7 @@ public class ZConfig
         }
     }
 
+    @Impure
     private static ZConfig load(ZConfig parent, List<String> content, int currentLevel, AtomicInteger lineNumber)
     {
         while (lineNumber.get() < content.size()) {
@@ -336,6 +357,7 @@ public class ZConfig
         return parent;
     }
 
+    @Impure
     private static ZConfig child(ZConfig parent, Matcher matcher, int currentLevel, String currentLine,
                                  AtomicInteger lineNumber)
     {
@@ -359,6 +381,7 @@ public class ZConfig
         public final int    currentLineNumber;
         public final String currentLine;
 
+        @Impure
         public ReadException(String message, String currentLine, AtomicInteger currentLineNumber)
         {
             super(String.format("%s %s: %s", message, currentLineNumber, currentLine));

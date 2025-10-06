@@ -1,5 +1,9 @@
 package zmq.socket.reqrep;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +50,7 @@ public class Router extends SocketBase
         private final Pipe    pipe;
         private boolean active;
 
+        @SideEffectFree
         public Outpipe(Pipe pipe, boolean active)
         {
             this.pipe = pipe;
@@ -83,6 +88,7 @@ public class Router extends SocketBase
     // will be terminated.
     private boolean handover;
 
+    @Impure
     public Router(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -111,6 +117,8 @@ public class Router extends SocketBase
         outpipes = new HashMap<>();
     }
 
+    @EnsuresCalledMethods(value="this.super", methods="destroy")
+    @Impure
     @Override
     protected void destroy()
     {
@@ -120,6 +128,7 @@ public class Router extends SocketBase
         super.destroy();
     }
 
+    @Impure
     @Override
     public void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -140,6 +149,7 @@ public class Router extends SocketBase
         }
     }
 
+    @Impure
     @Override
     public boolean xsetsockopt(int option, Object optval)
     {
@@ -171,6 +181,7 @@ public class Router extends SocketBase
         return false;
     }
 
+    @Impure
     @Override
     public void xpipeTerminated(Pipe pipe)
     {
@@ -185,6 +196,7 @@ public class Router extends SocketBase
         }
     }
 
+    @Impure
     @Override
     public void xreadActivated(Pipe pipe)
     {
@@ -200,6 +212,7 @@ public class Router extends SocketBase
         }
     }
 
+    @Impure
     @Override
     public void xwriteActivated(Pipe pipe)
     {
@@ -212,6 +225,7 @@ public class Router extends SocketBase
         }
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -287,6 +301,7 @@ public class Router extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -344,6 +359,7 @@ public class Router extends SocketBase
     }
 
     //  Rollback any message parts that were sent but not yet flushed.
+    @Impure
     protected boolean rollback()
     {
         if (currentOut != null) {
@@ -354,6 +370,7 @@ public class Router extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
@@ -397,6 +414,7 @@ public class Router extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {
@@ -406,12 +424,15 @@ public class Router extends SocketBase
         return true;
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {
         return fq.getCredential();
     }
 
+    @Impure
     private boolean identifyPeer(Pipe pipe, boolean isLocallyInitiated)
     {
         Blob identity;

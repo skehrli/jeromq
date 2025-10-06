@@ -1,5 +1,7 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.util.Draft;
 
 /**
@@ -24,6 +26,7 @@ public final class ZTimer
     {
         private final org.zeromq.timer.ZTimer.Timer delegate;
 
+        @SideEffectFree
         Timer(org.zeromq.timer.ZTimer.Timer delegate)
         {
             this.delegate = delegate;
@@ -47,6 +50,7 @@ public final class ZTimer
      * @param args the optional arguments for the handler.
      * @return an opaque handle for further cancel.
      */
+    @Impure
     public Timer add(long interval, Handler handler, Object... args)
     {
         if (handler == null) {
@@ -63,6 +67,7 @@ public final class ZTimer
      * @return true if set, otherwise false.
      * @deprecated use {@link org.zeromq.timer.ZTimer.Timer#setInterval(long)} instead
      */
+    @Impure
     @Deprecated
     public boolean setInterval(Timer timer, long interval)
     {
@@ -77,6 +82,7 @@ public final class ZTimer
      * @return true if reset, otherwise false.
      * @deprecated use {@link org.zeromq.timer.ZTimer.Timer#reset()} instead
      */
+    @Impure
     @Deprecated
     public boolean reset(Timer timer)
     {
@@ -90,6 +96,7 @@ public final class ZTimer
      * @return true if cancelled, otherwise false.
      * @deprecated use {@link org.zeromq.timer.ZTimer.Timer#cancel()} instead
      */
+    @Impure
     @Deprecated
     public boolean cancel(Timer timer)
     {
@@ -101,6 +108,7 @@ public final class ZTimer
      *
      * @return the time in millisecond until the next timer.
      */
+    @Impure
     public long timeout()
     {
         return timer.timeout();
@@ -111,6 +119,7 @@ public final class ZTimer
      *
      * @return the number of timers triggered.
      */
+    @Impure
     public int execute()
     {
         return timer.execute();
@@ -121,6 +130,7 @@ public final class ZTimer
      *
      * @return the number of timers triggered.
      */
+    @Impure
     public int sleepAndExecute()
     {
         return timer.sleepAndExecute();

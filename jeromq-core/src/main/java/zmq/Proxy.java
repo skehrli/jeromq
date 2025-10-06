@@ -1,5 +1,8 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.channels.Selector;
 import java.util.Arrays;
 
@@ -7,11 +10,13 @@ import zmq.poll.PollItem;
 
 class Proxy
 {
+    @Impure
     public static boolean proxy(SocketBase frontend, SocketBase backend, SocketBase capture)
     {
         return new Proxy().start(frontend, backend, capture, null);
     }
 
+    @Impure
     public static boolean proxy(SocketBase frontend, SocketBase backend, SocketBase capture, SocketBase control)
     {
         return new Proxy().start(frontend, backend, capture, control);
@@ -26,11 +31,13 @@ class Proxy
 
     private State state;
 
+    @SideEffectFree
     private Proxy()
     {
         state = State.ACTIVE;
     }
 
+    @Impure
     private boolean start(SocketBase frontend, SocketBase backend, SocketBase capture, SocketBase control)
     {
         //  The algorithm below assumes ratio of requests and replies processed
@@ -132,11 +139,14 @@ class Proxy
         return true;
     }
 
+    @Pure
+    @Impure
     private boolean process(PollItem read, PollItem write, SocketBase frontend, SocketBase backend)
     {
         return state == State.ACTIVE && read.isReadable() && (frontend == backend || write.isWritable());
     }
 
+    @Impure
     private boolean forward(SocketBase from, SocketBase to, SocketBase capture)
     {
         int more;
@@ -167,6 +177,7 @@ class Proxy
         return true;
     }
 
+    @Impure
     private boolean capture(SocketBase capture, Msg msg, int more)
     {
         if (capture != null) {

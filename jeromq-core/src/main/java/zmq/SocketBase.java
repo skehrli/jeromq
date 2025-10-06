@@ -1,5 +1,12 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectableChannel;
@@ -25,6 +32,7 @@ import zmq.util.Blob;
 import zmq.util.Clock;
 import zmq.util.MultiMap;
 
+@InheritableMustCall("close")
 public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeEvents
 {
     private static class EndpointPipe
@@ -32,6 +40,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         private final Own endpoint;
         private final Pipe pipe;
 
+        @SideEffectFree
         public EndpointPipe(Own endpoint, Pipe pipe)
         {
             super();
@@ -39,6 +48,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             this.pipe = pipe;
         }
 
+        @Pure
         @Override
         public String toString()
         {
@@ -53,16 +63,19 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     {
         private final SocketBase monitorSocket;
 
+        @SideEffectFree
         public SocketEventHandler(SocketBase monitorSocket)
         {
             this.monitorSocket = monitorSocket;
         }
 
+        @Impure
         public void consume(ZMQ.Event ev)
         {
             ev.write(monitorSocket);
         }
 
+        @Impure
         @Override
         public void close()
         {
@@ -91,6 +104,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     private final AtomicBoolean destroyed;
 
     //  Socket's mailbox object.
+    @Owning
     private final IMailbox mailbox;
 
     //  the attached pipes.
@@ -126,11 +140,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     // Mutex for synchronize access to the socket in thread safe mode
     private final ReentrantLock threadSafeSync;
 
+    @Impure
     protected SocketBase(Ctx parent, int tid, int sid)
     {
         this(parent, tid, sid, false);
     }
 
+    @Impure
     protected SocketBase(Ctx parent, int tid, int sid, boolean threadSafe)
     {
         super(parent, tid);
@@ -160,18 +176,23 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Concrete algorithms for the x- methods are to be defined by
     //  individual socket types.
+    @Impure
     protected abstract void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated);
 
+    @Impure
     protected abstract void xpipeTerminated(Pipe pipe);
 
     /**
      * @return false if object is not a socket.
      */
+    @Pure
     boolean isActive()
     {
         return active;
     }
 
+    @EnsuresCalledMethods(value="this.mailbox", methods="close")
+    @Impure
     @Override
     protected void destroy()
     {
@@ -188,6 +209,8 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Returns the mailbox associated with this socket.
+    @NotOwning
+    @Pure
     final IMailbox getMailbox()
     {
         return mailbox;
@@ -195,6 +218,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Interrupt blocking call if the socket is stuck in one.
     //  This function can be called from a different thread!
+    @Impure
     final void stop()
     {
         //  Called by ctx when it is terminated (zmq_term).
@@ -206,6 +230,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Check whether transport protocol, as specified in connect or
     //  bind, is available and compatible with the socket type.
+    @Impure
     private NetProtocol checkProtocol(String protocol)
     {
         try {
@@ -233,11 +258,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Register the pipe with this socket.
+    @Impure
     private void attachPipe(Pipe pipe, boolean isLocallyInitiated)
     {
         attachPipe(pipe, false, isLocallyInitiated);
     }
 
+    @Impure
     private void attachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
         assert (pipe != null);
@@ -257,6 +284,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final boolean setSocketOpt(int option, Object optval)
     {
         lock();
@@ -286,6 +314,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final int getSocketOpt(int option)
     {
         lock();
@@ -329,6 +358,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final Object getSocketOptx(int option)
     {
         if (ctxTerminated.get()) {
@@ -370,6 +400,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return options.getSocketOpt(option);
     }
 
+    @Impure
     public final boolean bind(final String addr)
     {
         lock();
@@ -441,6 +472,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final boolean connect(String addr)
     {
         lock();
@@ -453,6 +485,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final int connectPeer(String addr)
     {
         lock();
@@ -475,6 +508,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     private boolean connectInternal(String addr)
     {
         if (ctxTerminated.get()) {
@@ -669,12 +703,14 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return true;
     }
 
+    @Impure
     public boolean disconnectPeer(int routingId)
     {
         return xdisconnectPeer(routingId);
     }
 
     //  Creates new endpoint ID and adds the endpoint to the map.
+    @Impure
     private void addEndpoint(String addr, Own endpoint, Pipe pipe)
     {
         //  Activate the session. Make it a child of this socket.
@@ -682,6 +718,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         endpoints.insert(addr, new EndpointPipe(endpoint, pipe));
     }
 
+    @Impure
     public final boolean termEndpoint(String addr)
     {
         lock();
@@ -776,11 +813,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final boolean send(Msg msg, int flags)
     {
         return send(msg, flags, null);
     }
 
+    @Impure
     public final boolean send(Msg msg, int flags, AtomicBoolean canceled)
     {
         lock();
@@ -868,11 +907,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final Msg recv(int flags)
     {
         return recv(flags, null);
     }
 
+    @Impure
     public final Msg recv(int flags, AtomicBoolean canceled)
     {
         lock();
@@ -975,6 +1016,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final boolean join(String group)
     {
         lock();
@@ -987,6 +1029,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final boolean leave(String group)
     {
         lock();
@@ -999,12 +1042,14 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final void cancel(AtomicBoolean canceled)
     {
         canceled.set(true);
         sendCancel();
     }
 
+    @Impure
     public final int poll(int interest, int timeout, AtomicBoolean canceled)
     {
         lock();
@@ -1068,6 +1113,8 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
+    @EnsuresCalledMethods(value="this", methods="destroy")
     public final void close()
     {
         lock();
@@ -1088,11 +1135,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  These functions are used by the polling mechanism to determine
     //  which events are to be reported from this socket.
+    @Impure
     final boolean hasIn()
     {
         return xhasIn();
     }
 
+    @Impure
     final boolean hasOut()
     {
         return xhasOut();
@@ -1100,6 +1149,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Using this function reaper thread ask the socket to register with
     //  its poller.
+    @Impure
     final void startReaping(Poller poller)
     {
         //  Plug the socket to the reaper thread.
@@ -1118,6 +1168,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         checkDestroy();
     }
 
+    @Impure
     private boolean isInEvent()
     {
         Boolean bRes = isInEventThreadLocal.get();
@@ -1128,6 +1179,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     //  returns only after at least one command was processed.
     //  If throttle argument is true, commands are processed at most once
     //  in a predefined time period.
+    @Impure
     private boolean processCommands(int timeout, boolean throttle, AtomicBoolean canceled)
     {
         Command cmd;
@@ -1191,6 +1243,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return true;
     }
 
+    @Impure
     @Override
     protected final void processStop()
     {
@@ -1204,12 +1257,14 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     @Override
     protected final void processBind(Pipe pipe)
     {
         attachPipe(pipe, false);
     }
 
+    @Impure
     @Override
     protected final void processTerm(int linger)
     {
@@ -1230,6 +1285,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Delay actual destruction of the socket.
+    @Impure
     @Override
     protected final void processDestroy()
     {
@@ -1239,77 +1295,93 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     //  The default implementation assumes there are no specific socket
     //  options for the particular socket type. If not so, overload this
     //  method.
+    @Impure
     protected boolean xsetsockopt(int option, Object optval)
     {
         errno.set(ZError.EINVAL);
         return false;
     }
 
+    @Impure
     protected boolean xhasOut()
     {
         return false;
     }
 
+    @Impure
     protected boolean xsend(Msg msg)
     {
         throw new UnsupportedOperationException("Must Override");
     }
 
+    @Impure
     protected boolean xhasIn()
     {
         return false;
     }
 
+    @Impure
     protected Msg xrecv()
     {
         throw new UnsupportedOperationException("Must Override");
     }
 
+    @Pure
+    @Impure
     protected Blob getCredential()
     {
         throw new UnsupportedOperationException("Must Override");
     }
 
+    @Impure
     protected void xreadActivated(Pipe pipe)
     {
         throw new UnsupportedOperationException("Must Override");
     }
 
+    @Impure
     protected void xwriteActivated(Pipe pipe)
     {
         throw new UnsupportedOperationException("Must Override");
     }
 
+    @Impure
     protected void xhiccuped(Pipe pipe)
     {
         throw new UnsupportedOperationException("Must override");
     }
 
+    @Impure
     protected boolean xjoin(String group)
     {
         throw new UnsupportedOperationException("Must override");
     }
 
+    @Impure
     protected boolean xleave(String group)
     {
         throw new UnsupportedOperationException("Must override");
     }
 
+    @Impure
     protected boolean xdisconnectPeer(int routingId)
     {
         throw new UnsupportedOperationException("Must override");
     }
 
+    @Impure
     private void enterInEvent()
     {
         isInEventThreadLocal.set(true);
     }
 
+    @Impure
     private void leaveInEvent()
     {
         isInEventThreadLocal.remove();
     }
 
+    @Impure
     @Override
     public final void inEvent()
     {
@@ -1334,6 +1406,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  To be called after processing commands or invoking any command
     //  handlers explicitly. If required, it will deallocate the socket.
+    @Impure
     private void checkDestroy()
     {
         //  If the object was already marked as destroyed, finish the deallocation.
@@ -1352,18 +1425,21 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     @Override
     public final void readActivated(Pipe pipe)
     {
         xreadActivated(pipe);
     }
 
+    @Impure
     @Override
     public final void writeActivated(Pipe pipe)
     {
         xwriteActivated(pipe);
     }
 
+    @Impure
     @Override
     public final void hiccuped(Pipe pipe)
     {
@@ -1376,6 +1452,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     @Override
     public final void pipeTerminated(Pipe pipe)
     {
@@ -1395,6 +1472,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Moves the flags from the message to local variables,
     //  to be later retrieved by getSocketOpt.
+    @Impure
     private void extractFlags(Msg msg)
     {
         //  Test whether IDENTITY flag is valid for this socket type.
@@ -1412,6 +1490,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
      * @throws IllegalStateException if a previous monitor was already
      *         registered and consumer is not null.
      */
+    @Impure
     public final boolean monitor(final String addr, int events)
     {
         synchronized (monitor) {
@@ -1462,6 +1541,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
      * @throws IllegalStateException if a previous monitor was already
      *         registered and consumer is not null.
      */
+    @Impure
     public final boolean setEventHook(ZMQ.EventConsummer consumer, int events)
     {
         synchronized (monitor) {
@@ -1485,81 +1565,97 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     public final void eventHandshaken(String addr, int zmtpVersion)
     {
         event(addr, zmtpVersion, ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL);
     }
 
+    @Impure
     public final void eventConnected(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_CONNECTED);
     }
 
+    @Impure
     public final void eventConnectDelayed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_CONNECT_DELAYED);
     }
 
+    @Impure
     public final void eventConnectRetried(String addr, int interval)
     {
         event(addr, interval, ZMQ.ZMQ_EVENT_CONNECT_RETRIED);
     }
 
+    @Impure
     public final void eventListening(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_LISTENING);
     }
 
+    @Impure
     public final void eventBindFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_BIND_FAILED);
     }
 
+    @Impure
     public final void eventAccepted(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_ACCEPTED);
     }
 
+    @Impure
     public final void eventAcceptFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_ACCEPT_FAILED);
     }
 
+    @Impure
     public final void eventClosed(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_CLOSED);
     }
 
+    @Impure
     public final void eventCloseFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_CLOSE_FAILED);
     }
 
+    @Impure
     public final void eventDisconnected(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_DISCONNECTED);
     }
 
+    @Impure
     public final void eventHandshakeFailedNoDetail(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL);
     }
 
+    @Impure
     public final void eventHandshakeFailedProtocol(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL);
     }
 
+    @Impure
     public final void eventHandshakeFailedAuth(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_AUTH);
     }
 
+    @Impure
     public final void eventHandshakeSucceeded(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_SUCCEEDED);
     }
 
+    @Impure
     private void event(String addr, Object arg, int event)
     {
         synchronized (monitor) {
@@ -1571,6 +1667,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Send a monitor event
+    @Impure
     protected final void monitorEvent(ZMQ.Event event)
     {
         if (monitor.get() == null) {
@@ -1579,6 +1676,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         monitor.get().consume(event);
     }
 
+    @Impure
     private void stopMonitor()
     {
         // this is a private method which is only called from
@@ -1594,12 +1692,14 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     @Override
     public String toString()
     {
         return getClass().getSimpleName() + "[" + options.socketId + "]";
     }
 
+    @Impure
     public final SelectableChannel getFD()
     {
         if (threadSafe) {
@@ -1610,16 +1710,20 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return ((Mailbox) mailbox).getFd();
     }
 
+    @Pure
+    @Impure
     public String typeString()
     {
         return Sockets.name(options.type);
     }
 
+    @Impure
     public final int errno()
     {
         return errno.get();
     }
 
+    @Impure
     private void lock()
     {
         if (threadSafe) {
@@ -1627,6 +1731,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
+    @Impure
     private void unlock()
     {
         if (threadSafe) {
@@ -1639,12 +1744,15 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         private final String protocol;
         private final String address;
 
+        @SideEffectFree
         private SimpleURI(String protocol, String address)
         {
             this.protocol = protocol;
             this.address = address;
         }
 
+        @SideEffectFree
+        @Impure
         public static SimpleURI create(String value)
         {
             int pos = value.indexOf("://");
@@ -1660,11 +1768,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             return new SimpleURI(protocol, address);
         }
 
+        @Pure
         public String getProtocol()
         {
             return protocol;
         }
 
+        @Pure
         public String getAddress()
         {
             return address;

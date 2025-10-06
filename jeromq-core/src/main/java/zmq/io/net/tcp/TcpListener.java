@@ -1,5 +1,8 @@
 package zmq.io.net.tcp;
 
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.MustCallAlias;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -21,23 +24,27 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         isWindows = os.contains("win");
     }
 
+    @Impure
     public TcpListener(IOThread ioThread, SocketBase socket, final Options options)
     {
         super(ioThread, socket, options);
     }
 
+    @Impure
     @Override
     public String getAddress()
     {
         return address(getZAddress());
     }
 
+    @Impure
     protected String address(Address.IZAddress<InetSocketAddress> address)
     {
         int port = getFd().socket().getLocalPort();
         return address.toString(port);
     }
 
+    @Impure
     @Override
     public boolean setAddress(String addr)
     {
@@ -46,12 +53,14 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
     }
 
     //  Set address to listen on, used by IpcListener that already resolved the address.
+    @Impure
     protected boolean setAddress(InetSocketAddress addr)
     {
         //  Convert the textual address into address structure.
         return setZAddress(new TcpAddress(addr));
     }
 
+    @Impure
     @Override
     protected ServerSocketChannel openServer(TcpAddress address) throws IOException
     {
@@ -63,6 +72,7 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         }
     }
 
+    @Impure
     @Override
     protected void bindServer(ServerSocketChannel fd, TcpAddress address) throws IOException
     {
@@ -92,8 +102,10 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         fd.socket().bind(address.address(), options.backlog);
     }
 
+    @Impure
     @Override
-    protected SocketChannel accept(ServerSocketChannel fd) throws IOException
+    @MustCallAlias
+    protected SocketChannel accept(@Owning @MustCallAlias ServerSocketChannel fd) throws IOException
     {
         //  The situation where connection cannot be accepted due to insufficient
         //  resources is considered valid and treated by ignoring the connection.
@@ -139,6 +151,7 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         return sock;
     }
 
+    @Impure
     @Override
     protected void tuneAcceptedChannel(SocketChannel channel) throws IOException
     {
@@ -151,8 +164,9 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
                 options.tcpKeepAliveIntvl);
     }
 
+    @Impure
     @Override
-    protected void closeServerChannel(ServerSocketChannel fd) throws IOException
+    protected void closeServerChannel(@Owning ServerSocketChannel fd) throws IOException
     {
         fd.close();
     }

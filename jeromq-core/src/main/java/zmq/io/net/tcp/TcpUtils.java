@@ -1,5 +1,8 @@
 package zmq.io.net.tcp;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.Owning;
 import java.io.IOException;
 import java.net.SocketOption;
 import java.net.StandardSocketOptions;
@@ -15,11 +18,13 @@ import zmq.util.Utils;
 
 public class TcpUtils
 {
+    @SideEffectFree
     private TcpUtils()
     {
     }
 
     // The explicit IOException is useless, but kept for API compatibility
+    @Impure
     public static void tuneTcpSocket(Channel channel) throws IOException
     {
         // Disable Nagle's algorithm. We are doing data batching on 0MQ level,
@@ -28,6 +33,7 @@ public class TcpUtils
         setOption(channel, StandardSocketOptions.TCP_NODELAY, true);
     }
 
+    @Impure
     public static void tuneTcpKeepalives(Channel channel, int tcpKeepAlive, int tcpKeepAliveCnt,
             int tcpKeepAliveIdle, int tcpKeepAliveIntvl)
     {
@@ -49,31 +55,36 @@ public class TcpUtils
         }
     }
 
+    @Impure
     public static boolean setTcpReceiveBuffer(Channel channel, final int rcvbuf)
     {
         setOption(channel, StandardSocketOptions.SO_RCVBUF, rcvbuf);
         return true;
     }
 
+    @Impure
     public static boolean setTcpSendBuffer(Channel channel, final int sndbuf)
     {
         setOption(channel, StandardSocketOptions.SO_SNDBUF, sndbuf);
         return true;
     }
 
+    @Impure
     public static boolean setIpTypeOfService(Channel channel, final int tos)
     {
         setOption(channel, StandardSocketOptions.IP_TOS, tos);
         return true;
     }
 
+    @Impure
     public static boolean setReuseAddress(Channel channel, final boolean reuse)
     {
         setOption(channel, StandardSocketOptions.SO_REUSEADDR, reuse);
         return true;
     }
 
-    private static <T> void setOption(Channel channel, SocketOption<T> option, T value)
+    @Impure
+    private static <T> void setOption(Channel channel, SocketOption<T> option, @Owning T value)
     {
         try {
             if (channel instanceof NetworkChannel) {
@@ -88,6 +99,7 @@ public class TcpUtils
         }
     }
 
+    @Impure
     public static void unblockSocket(SelectableChannel... channels) throws IOException
     {
         for (SelectableChannel ch : channels) {
@@ -95,6 +107,7 @@ public class TcpUtils
         }
     }
 
+    @SideEffectFree
     public static void enableIpv4Mapping(SelectableChannel channel)
     {
         // TODO V4 enable ipv4 mapping
@@ -108,6 +121,7 @@ public class TcpUtils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
+    @Impure
     @Deprecated
     public static Address getPeerIpAddress(SocketChannel channel)
     {

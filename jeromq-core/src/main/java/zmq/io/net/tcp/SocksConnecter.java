@@ -1,5 +1,8 @@
 package zmq.io.net.tcp;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Options;
 import zmq.io.IOThread;
 import zmq.io.SessionBase;
@@ -25,6 +28,7 @@ public class SocksConnecter extends TcpConnecter
     // String representation of endpoint to connect to
     String endpoint;
 
+    @Impure
     public SocksConnecter(IOThread ioThread, SessionBase session, final Options options, final Address addr,
             final Address proxyAddr, boolean delayedStart)
     {
@@ -35,6 +39,8 @@ public class SocksConnecter extends TcpConnecter
         throw new UnsupportedOperationException("Socks connecter is not implemented");
     }
 
+    @SideEffectFree
+    @Impure
     @Override
     protected void processPlug()
     {
@@ -46,6 +52,7 @@ public class SocksConnecter extends TcpConnecter
         }
     }
 
+    @Impure
     @Override
     protected void processTerm(int linger)
     {
@@ -69,6 +76,7 @@ public class SocksConnecter extends TcpConnecter
         super.processTerm(linger);
     }
 
+    @Impure
     @Override
     public void inEvent()
     {
@@ -77,12 +85,14 @@ public class SocksConnecter extends TcpConnecter
         super.inEvent();
     }
 
+    @Impure
     @Override
     public void outEvent()
     {
         super.outEvent();
     }
 
+    @Impure
     @Override
     public void timerEvent(int id)
     {
@@ -90,28 +100,34 @@ public class SocksConnecter extends TcpConnecter
     }
 
     //  Internal function to start the actual connection establishment.
+    @SideEffectFree
     void initiateConnect()
     {
     }
 
+    @Pure
     int processServerResponse()
     {
         return -1;
     }
 
+    @SideEffectFree
     void parseAddress(String address, String hostname, int port)
     {
     }
 
+    @SideEffectFree
     void connectToProxy()
     {
     }
 
+    @SideEffectFree
     void error()
     {
     }
 
     //  Internal function to start reconnect timer
+    @SideEffectFree
     void startTimer()
     {
     }
@@ -119,6 +135,7 @@ public class SocksConnecter extends TcpConnecter
     //  Internal function to return a reconnect backoff delay.
     //  Will modify the current_reconnect_ivl used for next call
     //  Returns the currently used interval
+    @Pure
     int getNewReconnectIvl()
     {
         return -1;
@@ -127,6 +144,7 @@ public class SocksConnecter extends TcpConnecter
     //  Open TCP connecting socket. Returns -1 in case of error,
     //  0 if connect was successfull immediately. Returns -1 with
     //  EAGAIN errno if async connect was launched.
+    @Pure
     int open()
     {
         return -1;
@@ -134,6 +152,7 @@ public class SocksConnecter extends TcpConnecter
 
     //  Get the file descriptor of newly created connection. Returns
     //  retired_fd if the connection was unsuccessfull.
+    @SideEffectFree
     void checkProxyConnection()
     {
     }

@@ -1,5 +1,7 @@
 package zmq.io.net.ipc;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.function.BiConsumer;
@@ -19,12 +21,14 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
+    @Pure
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
         return protocol == NetProtocol.ipc;
     }
 
+    @Impure
     @Override
     public Listener getListener(IOThread ioThread, SocketBase socket,
                                 Options options)
@@ -32,24 +36,28 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetS
         return new IpcListener(ioThread, socket, options);
     }
 
+    @Pure
     @Override
     public boolean handleAdress(SocketAddress socketAddress)
     {
         return socketAddress instanceof InetSocketAddress;
     }
 
+    @Impure
     @Override
     public String formatSocketAddress(InetSocketAddress socketAddress)
     {
         return socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
     }
 
+    @Impure
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
         return new IpcAddress(addr);
     }
 
+    @Impure
     @Override
     public void startConnecting(Options options, IOThread ioThread,
                                 SessionBase session, Address<InetSocketAddress> addr,
@@ -60,12 +68,14 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetS
         launchChild.accept(connecter);
     }
 
+    @Pure
     @Override
     public boolean isValid()
     {
         return true;
     }
 
+    @Pure
     @Override
     public boolean wantsIOThread()
     {

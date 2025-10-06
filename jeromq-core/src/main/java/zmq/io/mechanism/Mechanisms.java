@@ -1,5 +1,7 @@
 package zmq.io.mechanism;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,11 +21,13 @@ import zmq.io.net.Address;
 public enum Mechanisms
 {
     NULL {
+        @SideEffectFree
         @Override
         public void check(Options options)
         {
             // Nothing to check
         }
+        @Impure
         @Override
         public Mechanism create(SessionBase session, Address peerAddress, Options options)
         {
@@ -31,6 +35,7 @@ public enum Mechanisms
         }
     },
     PLAIN {
+        @Impure
         @Override
         public void check(Options options)
         {
@@ -49,6 +54,8 @@ public enum Mechanisms
                 }
             }
         }
+        @SideEffectFree
+        @Impure
         @Override
         public Mechanism create(SessionBase session, Address peerAddress, Options options)
         {
@@ -61,6 +68,7 @@ public enum Mechanisms
         }
     },
     CURVE {
+        @Impure
         @Override
         public void check(Options options)
         {
@@ -78,6 +86,7 @@ public enum Mechanisms
                 throw new IllegalStateException("Curve mechanism definition incomplete: " +  errors);
             }
         }
+        @Impure
         @Override
         public Mechanism create(SessionBase session, Address peerAddress, Options options)
         {
@@ -90,11 +99,14 @@ public enum Mechanisms
         }
     },
     GSSAPI {
+        @SideEffectFree
         @Override
         public void check(Options options)
         {
             throw new UnsupportedOperationException("GSSAPI mechanism is not yet implemented");
         }
+        @SideEffectFree
+        @Impure
         @Override
         public Mechanism create(SessionBase session, Address peerAddress, Options options)
         {
@@ -107,10 +119,13 @@ public enum Mechanisms
         }
     };
 
+    @Impure
     public abstract Mechanism create(SessionBase session, Address peerAddress, Options options);
 
+    @Impure
     public abstract void check(Options options);
 
+    @Impure
     public boolean isMechanism(ByteBuffer greetingRecv)
     {
         byte[] dst = new byte[20];

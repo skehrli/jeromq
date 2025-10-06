@@ -1,19 +1,27 @@
 package zmq.io.net;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.net.SocketAddress;
 
 public class Address<S extends SocketAddress>
 {
     public interface IZAddress<SA extends SocketAddress>
     {
+        @Impure
         ProtocolFamily family();
 
+        @Impure
         String toString(int port);
 
+        @Impure
         SA resolve(String name, boolean ipv6, boolean local);
 
+        @Pure
         SA address();
 
+        @Pure
         SA sourceAddress();
     }
 
@@ -27,6 +35,7 @@ public class Address<S extends SocketAddress>
      * @param address
      * @throws IllegalArgumentException if the protocol name can be matched to an actual supported protocol
      */
+    @Impure
     @Deprecated
     public Address(final String protocol, final String address)
     {
@@ -39,6 +48,7 @@ public class Address<S extends SocketAddress>
      * @param protocol
      * @param address
      */
+    @SideEffectFree
     public Address(final NetProtocol protocol, final String address)
     {
         this.protocol = protocol;
@@ -50,6 +60,7 @@ public class Address<S extends SocketAddress>
      * @param socketAddress
      * @throws IllegalArgumentException if the SocketChannel is not an IP socket address
      */
+    @Impure
     public Address(SocketAddress socketAddress)
     {
         protocol = NetProtocol.findByAddress(socketAddress);
@@ -57,6 +68,8 @@ public class Address<S extends SocketAddress>
         resolved = null;
      }
 
+    @SideEffectFree
+    @Impure
     @Override
     public String toString()
     {
@@ -71,16 +84,19 @@ public class Address<S extends SocketAddress>
         }
     }
 
+    @Pure
     public NetProtocol protocol()
     {
         return protocol;
     }
 
+    @Pure
     public String address()
     {
         return address;
     }
 
+    @SideEffectFree
     public String host()
     {
         final int portDelimiter = address.lastIndexOf(':');
@@ -90,16 +106,19 @@ public class Address<S extends SocketAddress>
         return address;
     }
 
+    @Pure
     public IZAddress<S> resolved()
     {
         return resolved;
     }
 
+    @Pure
     public boolean isResolved()
     {
         return resolved != null;
     }
 
+    @Impure
     public IZAddress<S> resolve(boolean ipv6)
     {
         resolved = protocol.zresolve(address, ipv6);

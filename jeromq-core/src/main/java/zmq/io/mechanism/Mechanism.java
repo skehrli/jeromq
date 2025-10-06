@@ -1,5 +1,8 @@
 package zmq.io.mechanism;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -47,6 +50,7 @@ public abstract class Mechanism
 
     protected String statusCode;
 
+    @SideEffectFree
     protected Mechanism(SessionBase session, Address peerAddress, Options options)
     {
         this.session = session;
@@ -54,13 +58,16 @@ public abstract class Mechanism
         this.peerAddress = peerAddress;
     }
 
+    @Pure
     public abstract Status status();
 
+    @Impure
     private void setPeerIdentity(byte[] data)
     {
         identity = Blob.createBlob(data);
     }
 
+    @Impure
     public final Msg peerIdentity()
     {
         byte[] data = new byte[0];
@@ -77,27 +84,32 @@ public abstract class Mechanism
         return msg;
     }
 
+    @Impure
     private void setUserId(byte[] data)
     {
         userId = Blob.createBlob(data);
         zapProperties.put(Metadata.USER_ID, new String(data, ZMQ.CHARSET));
     }
 
+    @Pure
     public final Blob getUserId()
     {
         return userId;
     }
 
+    @Impure
     protected final void addProperty(ByteBuffer buf, String name, String value)
     {
         addProperty(buf, name, value.getBytes(ZMQ.CHARSET));
     }
 
+    @Impure
     protected final void addProperty(Msg msg, String name, String value)
     {
         addProperty(msg, name, value.getBytes(ZMQ.CHARSET));
     }
 
+    @Impure
     protected final void addProperty(ByteBuffer buf, String name, byte[] value)
     {
         byte[] nameB = name.getBytes(ZMQ.CHARSET);
@@ -115,6 +127,7 @@ public abstract class Mechanism
         }
     }
 
+    @Impure
     protected final void addProperty(Msg msg, String name, byte[] value)
     {
         byte[] nameB = name.getBytes(ZMQ.CHARSET);
@@ -132,11 +145,13 @@ public abstract class Mechanism
         }
     }
 
+    @Impure
     protected final int parseMetadata(Msg msg, int offset, boolean zapFlag)
     {
         return parseMetadata(msg.buf(), offset, zapFlag);
     }
 
+    @Impure
     protected final int parseMetadata(ByteBuffer msg, int offset, boolean zapFlag)
     {
         Metadata meta = zapFlag ? zapProperties : zmtpProperties;
@@ -162,6 +177,7 @@ public abstract class Mechanism
         });
     }
 
+    @Pure
     protected int property(String name, byte[] value)
     {
         //  Default implementation does not check
@@ -169,6 +185,8 @@ public abstract class Mechanism
         return 0;
     }
 
+    @Pure
+    @Impure
     protected final String socketType()
     {
         if (options.asType != -1) {
@@ -179,11 +197,13 @@ public abstract class Mechanism
         }
     }
 
+    @Impure
     protected boolean compare(Msg msg, String data, boolean includeLength)
     {
         return Msgs.startsWith(msg, data, includeLength);
     }
 
+    @Impure
     protected boolean compare(ByteBuffer a1, byte[] b, int offset, int length)
     {
         if (length > b.length) {
@@ -199,22 +219,28 @@ public abstract class Mechanism
         return comparison;
     }
 
+    @Impure
     public Msg decode(Msg msg)
     {
         return msg;
     }
 
+    @Impure
     public Msg encode(Msg msg)
     {
         return msg;
     }
 
+    @Impure
     public abstract int zapMsgAvailable();
 
+    @Impure
     public abstract int processHandshakeCommand(Msg msg);
 
+    @Impure
     public abstract int nextHandshakeCommand(Msg msg);
 
+    @Impure
     protected int parseErrorMessage(Msg msg)
     {
         if (msg.size() < 7 && msg.size() != 6) {
@@ -240,6 +266,7 @@ public abstract class Mechanism
         return 0;
     }
 
+    @Impure
     protected int handleErrorReason(String reason)
     {
         int rc = -1;
@@ -263,6 +290,7 @@ public abstract class Mechanism
         return rc;
     }
 
+    @Impure
     protected final void sendZapRequest(Mechanisms mechanism, boolean more)
     {
         assert (session != null);
@@ -322,6 +350,7 @@ public abstract class Mechanism
         assert (rc);
     }
 
+    @Impure
     protected final int receiveAndProcessZapReply()
     {
         assert (session != null);
@@ -376,6 +405,7 @@ public abstract class Mechanism
         return parseMetadata(msgs.get(6), 0, true);
     }
 
+    @SideEffectFree
     public void destroy()
     {
     }

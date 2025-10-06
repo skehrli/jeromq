@@ -1,5 +1,8 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.channels.SelectableChannel;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -133,6 +136,7 @@ public class ZActor extends ZStar
          * @param pipe   the backstage control pipe
          * @return the name of the upcoming performance.
          */
+        @Impure
         String premiere(Socket pipe);
 
         /**
@@ -145,6 +149,7 @@ public class ZActor extends ZStar
          * @param args   the arguments passed as parameters of the ZActor
          * @return a list of created sockets that will be managed by the double. Not null.
          */
+        @Impure
         List<Socket> createSockets(ZContext ctx, Object... args);
 
         /**
@@ -156,6 +161,7 @@ public class ZActor extends ZStar
          * @param sockets  the managed sockets that were created in the previous step
          * @param poller   the poller where to eventually register the sockets for events
          */
+        @Impure
         void start(Socket pipe, List<Socket> sockets, ZPoller poller);
 
         /**
@@ -168,6 +174,7 @@ public class ZActor extends ZStar
          * @param poller the poller of the double
          * @return the timeout of the coming loop. <b>-1 to block, 0 to not wait, &gt; 0 to wait</b> till max the returned duration in milliseconds
          */
+        @Impure
         long looping(Socket pipe, ZPoller poller);
 
         /**
@@ -179,6 +186,7 @@ public class ZActor extends ZStar
          * @param events  the events source of the call
          * @return true in case of success, <b>false to stop the actor</b>.
          */
+        @Impure
         boolean backstage(Socket pipe, ZPoller poller, int events);
 
         /**
@@ -191,6 +199,7 @@ public class ZActor extends ZStar
          * @param events  the events source of the call
          * @return true in case of success, <b>false to stop the actor</b>.
          */
+        @Impure
         boolean stage(Socket socket, Socket pipe, ZPoller poller, int events);
 
         /**
@@ -201,6 +210,7 @@ public class ZActor extends ZStar
          * @param poller the poller of the double.
          * @return true to continue with the current doppelganger, <b>false to stop it</b>.
          */
+        @Impure
         boolean looped(Socket pipe, ZPoller poller);
 
         /**
@@ -209,6 +219,7 @@ public class ZActor extends ZStar
          *
          * @param socket   the closed socked.
          */
+        @Impure
         void closed(Socket socket);
 
         /**
@@ -220,6 +231,7 @@ public class ZActor extends ZStar
          * @param poller the poller of the double.
          * @return <b>true to restart a new double</b>, false to stop the acting process
          */
+        @Impure
         boolean destroyed(ZContext ctx, Socket pipe, ZPoller poller);
 
         /**
@@ -230,6 +242,7 @@ public class ZActor extends ZStar
          * @param pipe   the backstage control pipe
          * @return true to spread the word of the actor's leaving
          */
+        @Impure
         boolean finished(Socket pipe);
     }
 
@@ -239,24 +252,28 @@ public class ZActor extends ZStar
     // simple contract implementation for acting on the stage
     public static class SimpleActor implements Actor
     {
+        @Impure
         @Override
         public String premiere(final Socket pipe)
         {
             return null;
         }
 
+        @Impure
         @Override
         public List<Socket> createSockets(final ZContext ctx, final Object... args)
         {
             return Collections.emptyList();
         }
 
+        @Impure
         @Override
         public void start(final Socket pipe, final List<Socket> sockets, final ZPoller poller)
         {
             // do nothing
         }
 
+        @Impure
         @Override
         public long looping(Socket pipe, ZPoller poller)
         {
@@ -264,6 +281,7 @@ public class ZActor extends ZStar
             return -1;
         }
 
+        @Impure
         @Override
         public boolean backstage(final Socket pipe, final ZPoller poller, final int events)
         {
@@ -271,6 +289,7 @@ public class ZActor extends ZStar
             return false;
         }
 
+        @Impure
         @Override
         public boolean stage(final Socket socket, final Socket pipe, final ZPoller poller, int events)
         {
@@ -278,6 +297,7 @@ public class ZActor extends ZStar
             return false;
         }
 
+        @Impure
         @Override
         public boolean looped(final Socket pipe, final ZPoller poller)
         {
@@ -285,12 +305,14 @@ public class ZActor extends ZStar
             return true;
         }
 
+        @SideEffectFree
         @Override
         public void closed(final Socket socket)
         {
             // do nothing
         }
 
+        @Impure
         @Override
         public boolean destroyed(final ZContext ctx, final Socket pipe, final ZPoller poller)
         {
@@ -298,6 +320,7 @@ public class ZActor extends ZStar
             return false;
         }
 
+        @Pure
         @Override
         public boolean finished(final Socket pipe)
         {
@@ -319,6 +342,7 @@ public class ZActor extends ZStar
         // the actor that will play a passive role on the stage
         private final Actor shadow;
 
+        @Impure
         public Duo(final Actor main, final Actor shadow)
         {
             super();
@@ -328,6 +352,7 @@ public class ZActor extends ZStar
             this.shadow = shadow;
         }
 
+        @Impure
         @Override
         public String premiere(final Socket pipe)
         {
@@ -335,6 +360,7 @@ public class ZActor extends ZStar
             return main.premiere(pipe);
         }
 
+        @Impure
         @Override
         public List<Socket> createSockets(final ZContext ctx, final Object... args)
         {
@@ -342,6 +368,7 @@ public class ZActor extends ZStar
             return main.createSockets(ctx, args);
         }
 
+        @Impure
         @Override
         public void start(final Socket pipe, final List<Socket> sockets, final ZPoller poller)
         {
@@ -349,6 +376,7 @@ public class ZActor extends ZStar
             main.start(pipe, sockets, poller);
         }
 
+        @Impure
         @Override
         public long looping(Socket pipe, ZPoller poller)
         {
@@ -356,6 +384,7 @@ public class ZActor extends ZStar
             return main.looping(pipe, poller);
         }
 
+        @Impure
         @Override
         public boolean backstage(final Socket pipe, final ZPoller poller, final int events)
         {
@@ -363,6 +392,7 @@ public class ZActor extends ZStar
             return main.backstage(pipe, poller, events);
         }
 
+        @Impure
         @Override
         public boolean stage(final Socket socket, final Socket pipe, final ZPoller poller, final int events)
         {
@@ -370,6 +400,7 @@ public class ZActor extends ZStar
             return main.stage(socket, pipe, poller, events);
         }
 
+        @Impure
         @Override
         public boolean looped(final Socket pipe, final ZPoller poller)
         {
@@ -377,6 +408,7 @@ public class ZActor extends ZStar
             return main.looped(pipe, poller);
         }
 
+        @Impure
         @Override
         public void closed(final Socket socket)
         {
@@ -384,6 +416,7 @@ public class ZActor extends ZStar
             main.closed(socket);
         }
 
+        @Impure
         @Override
         public boolean destroyed(final ZContext ctx, final Socket pipe, final ZPoller poller)
         {
@@ -391,6 +424,7 @@ public class ZActor extends ZStar
             return main.destroyed(ctx, pipe, poller);
         }
 
+        @Impure
         @Override
         public boolean finished(final Socket pipe)
         {
@@ -409,6 +443,7 @@ public class ZActor extends ZStar
      * @param args
      *            the optional arguments that will be passed to the distant actor
      */
+    @Impure
     public ZActor(final Actor actor, final String motdelafin, final Object... args)
     {
         super(new ActorFortune(actor), motdelafin, args);
@@ -427,6 +462,7 @@ public class ZActor extends ZStar
      *            the optional arguments that will be passed to the distant actor
      * @deprecated use {@link ZActor#ZActor(Actor, String, Object...)}
      */
+    @Impure
     @Deprecated
     public ZActor(final SelectorCreator selector, final Actor actor, final String motdelafin, final Object... args)
     {
@@ -451,6 +487,7 @@ public class ZActor extends ZStar
      *            the optional arguments that will be passed to the distant actor
      * @deprecated use {@link ZActor#ZActor(ZContext, Actor, String, Object...)}
      */
+    @Impure
     @Deprecated
     public ZActor(final ZContext context, final SelectorCreator selector, final Actor actor, final String motdelafin,
                   final Object... args)
@@ -473,6 +510,7 @@ public class ZActor extends ZStar
      * @param args
      *            the optional arguments that will be passed to the distant actor
      */
+    @Impure
     public ZActor(final ZContext context, final Actor actor, final String motdelafin, final Object... args)
     {
         super(context, new ActorFortune(actor), motdelafin, args);
@@ -483,30 +521,35 @@ public class ZActor extends ZStar
     {
         private final Actor actor;
 
+        @Impure
         public ActorFortune(Actor actor)
         {
             Objects.requireNonNull(actor, "Actor shall be set to a non-null value");
             this.actor = actor;
         }
 
+        @Impure
         @Override
         public String premiere(Socket mic, Object... args)
         {
             return actor.premiere(mic);
         }
 
+        @Impure
         @Override
         public Star create(ZContext ctx, Socket pipe, int count, Star previous, Object... args)
         {
             return new ZActor.Double(ctx, pipe, actor, args);
         }
 
+        @Impure
         @Override
         public boolean interview(Socket mic)
         {
             return actor.finished(mic);
         }
 
+        @SideEffectFree
         @Override
         public void party(ZContext ctx)
         {
@@ -532,6 +575,7 @@ public class ZActor extends ZStar
         private final ZContext context;
 
         // creates a new double
+        @Impure
         public Double(final ZContext ctx, final Socket pipe, final Actor actor, final Object... args)
         {
             this.context = ctx;
@@ -548,6 +592,7 @@ public class ZActor extends ZStar
         }
 
         // before starting the loops
+        @Impure
         @Override
         public void prepare()
         {
@@ -556,6 +601,7 @@ public class ZActor extends ZStar
         }
 
         // gives the number of events to process
+        @Impure
         @Override
         public int breathe()
         {
@@ -565,6 +611,7 @@ public class ZActor extends ZStar
         }
 
         // acting takes place, return true to continue till the end
+        @Pure
         @Override
         public boolean act(int events)
         {
@@ -573,6 +620,7 @@ public class ZActor extends ZStar
         }
 
         // a loop just finished, return true to continue acting
+        @Impure
         @Override
         public boolean entract()
         {
@@ -580,6 +628,7 @@ public class ZActor extends ZStar
         }
 
         // destroys the double
+        @Impure
         @Override
         public boolean renews()
         {
@@ -599,6 +648,7 @@ public class ZActor extends ZStar
             return actor.destroyed(context, pipe, poller);
         }
 
+        @Pure
         @Override
         public boolean events(SelectableChannel channel, int events)
         {
@@ -607,6 +657,7 @@ public class ZActor extends ZStar
         }
 
         // an event has occurred on a registered socket
+        @Impure
         @Override
         public boolean events(final Socket socket, final int events)
         {

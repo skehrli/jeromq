@@ -1,5 +1,7 @@
 package zmq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +27,7 @@ public final class Timers
         private final Handler  handler;
         private final Object[] args;
 
+        @SideEffectFree
         private Timer(Timers parent, long interval, Handler handler, Object... args)
         {
             assert (args != null);
@@ -40,6 +43,7 @@ public final class Timers
          * @param interval the new interval of the timer.
          * @return true if set, otherwise false.
          */
+        @Impure
         public boolean setInterval(long interval)
         {
             if (alive) {
@@ -54,6 +58,7 @@ public final class Timers
          * This method is slow, canceling existing and adding a new timer yield better performance.
          * @return true if reset, otherwise false.
          */
+        @Impure
         public boolean reset()
         {
             if (alive) {
@@ -66,6 +71,7 @@ public final class Timers
          * Cancels a timer.
          * @return true if cancelled, otherwise false.
          */
+        @Impure
         public boolean cancel()
         {
             if (alive) {
@@ -78,12 +84,14 @@ public final class Timers
 
     public interface Handler
     {
+        @SideEffectFree
         void time(Object... args);
     }
 
     private final MultiMap<Long, Timer> timers = new MultiMap<>();
     private final Supplier<Long>        clock;
 
+    @Impure
     public Timers()
     {
         this(() -> TimeUnit.NANOSECONDS.toMillis(Clock.nowNS()));
@@ -95,16 +103,19 @@ public final class Timers
      * <strong>This constructor is for testing and is not intended to be used in production code.</strong>
      * @param clock the supplier of the current time in milliseconds.
      */
+    @SideEffectFree
     public Timers(Supplier<Long> clock)
     {
         this.clock = clock;
     }
 
+    @Impure
     private long now()
     {
         return clock.get();
     }
 
+    @Impure
     private boolean insert(Timer timer)
     {
         return timers.insert(now() + timer.interval, timer);
@@ -117,6 +128,7 @@ public final class Timers
      * @param args the optional arguments for the handler.
      * @return an opaque handle for further cancel.
      */
+    @Impure
     public Timer add(long interval, Handler handler, Object... args)
     {
         if (handler == null) {
@@ -136,6 +148,7 @@ public final class Timers
      * @return true if set, otherwise false.
      * @deprecated use {@link Timer#setInterval(long)} instead
      */
+    @Impure
     @Deprecated
     public boolean setInterval(Timer timer, long interval)
     {
@@ -150,6 +163,7 @@ public final class Timers
      * @return true if reset, otherwise false.
      * @deprecated use {@link Timer#reset()} instead
      */
+    @Impure
     @Deprecated
     public boolean reset(Timer timer)
     {
@@ -163,6 +177,7 @@ public final class Timers
      * @return true if cancelled, otherwise false.
      * @deprecated use {@link Timer#cancel()} instead
      */
+    @Impure
     @Deprecated
     public boolean cancel(Timer timer)
     {
@@ -174,6 +189,7 @@ public final class Timers
      * Returns the time in millisecond until the next timer.
      * @return the time in millisecond until the next timer.
      */
+    @Impure
     public long timeout()
     {
         final long now = now();
@@ -202,6 +218,7 @@ public final class Timers
      * Execute the timers.
      * @return the number of timers triggered.
      */
+    @Impure
     public int execute()
     {
         int executed = 0;
@@ -229,11 +246,13 @@ public final class Timers
         return executed;
     }
 
+    @Impure
     Iterable<Entry<Timer, Long>> entries()
     {
         return timers.entries();
     }
 
+    @Impure
     public int sleepAndExecute()
     {
         long timeout = timeout();

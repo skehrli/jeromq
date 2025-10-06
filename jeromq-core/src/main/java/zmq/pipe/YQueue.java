@@ -1,4 +1,6 @@
 package zmq.pipe;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 
 class YQueue<T>
 {
@@ -10,6 +12,7 @@ class YQueue<T>
         Chunk<T>    prev;
         Chunk<T>    next;
 
+        @Impure
         @SuppressWarnings("unchecked")
         public Chunk(int size, int memoryPtr)
         {
@@ -40,6 +43,7 @@ class YQueue<T>
     //  us from having to call malloc/free.
     private int memoryPtr;
 
+    @Impure
     public YQueue(int size)
     {
         this.size = size;
@@ -54,6 +58,7 @@ class YQueue<T>
         endPos = 1;
     }
 
+    @Pure
     public int frontPos()
     {
         return beginChunk.pos[beginPos];
@@ -61,11 +66,13 @@ class YQueue<T>
 
     //  Returns reference to the front element of the queue.
     //  If the queue is empty, behaviour is undefined.
+    @Pure
     public T front()
     {
         return beginChunk.values[beginPos];
     }
 
+    @Pure
     public int backPos()
     {
         return backChunk.pos[backPos];
@@ -73,12 +80,14 @@ class YQueue<T>
 
     //  Returns reference to the back element of the queue.
     //  If the queue is empty, behaviour is undefined.
+    @Pure
     public T back()
     {
         return backChunk.values[backPos];
     }
 
     //  Adds an element to the back end of the queue.
+    @Impure
     public void push(T val)
     {
         backChunk.values[backPos] = val;
@@ -111,6 +120,7 @@ class YQueue<T>
     //  unpush is called. It cannot be done automatically as the read
     //  side of the queue can be managed by different, completely
     //  unsynchronised thread.
+    @Impure
     public void unpush()
     {
         //  First, move 'back' one position backwards.
@@ -137,6 +147,7 @@ class YQueue<T>
     }
 
     //  Removes an element from the front end of the queue.
+    @Impure
     public T pop()
     {
         T val = beginChunk.values[beginPos];

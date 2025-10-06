@@ -1,5 +1,7 @@
 package zmq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -19,20 +21,24 @@ public class Utils
 {
     private static final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(SecureRandom::new);
 
+    @SideEffectFree
     private Utils()
     {
     }
 
+    @Impure
     public static int randomInt()
     {
         return random.get().nextInt();
     }
 
+    @Impure
     public static int randomInt(int bound)
     {
         return random.get().nextInt(bound);
     }
 
+    @Impure
     public static byte[] randomBytes(int length)
     {
         byte[] bytes = new byte[length];
@@ -46,11 +52,13 @@ public class Utils
      * @param port the port to find String hashcode-equivalent of. Has to be positive or 0.
      * @return a String whose hashcode is the number in input.
      */
+    @Impure
     public static String unhash(int port)
     {
         return unhash(new StringBuilder(), port, 'z').toString();
     }
 
+    @Impure
     private static StringBuilder unhash(StringBuilder builder, int port, char boundary)
     {
         int div = port / 31;
@@ -67,6 +75,7 @@ public class Utils
         return builder;
     }
 
+    @Impure
     public static int findOpenPort() throws IOException
     {
         try (ServerSocket tmpSocket = new ServerSocket(0, 0)) {
@@ -74,11 +83,13 @@ public class Utils
         }
     }
 
+    @Impure
     public static void unblockSocket(SelectableChannel... channels) throws IOException
     {
         TcpUtils.unblockSocket(channels);
     }
 
+    @SideEffectFree
     @SuppressWarnings("unchecked")
     public static <T> T[] realloc(Class<T> klass, T[] src, int size, boolean ended)
     {
@@ -108,6 +119,7 @@ public class Utils
         return dest;
     }
 
+    @Impure
     public static byte[] bytes(ByteBuffer buf)
     {
         byte[] d = new byte[buf.limit()];
@@ -115,6 +127,7 @@ public class Utils
         return d;
     }
 
+    @SideEffectFree
     public static byte[] realloc(byte[] src, int size)
     {
         byte[] dest = new byte[size];
@@ -125,6 +138,7 @@ public class Utils
         return dest;
     }
 
+    @Impure
     public static boolean delete(File path)
     {
         if (!path.exists()) {
@@ -149,6 +163,7 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
+    @Impure
     public static Address getPeerIpAddress(SocketChannel fd)
     {
         try {
@@ -167,6 +182,7 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
+    @Impure
     public static <S extends SocketAddress> Address<S> getLocalIpAddress(SocketChannel fd)
     {
         try {
@@ -178,6 +194,7 @@ public class Utils
         }
     }
 
+    @Impure
     public static String dump(ByteBuffer buffer, int pos, int limit)
     {
         int oldpos = buffer.position();
@@ -195,11 +212,13 @@ public class Utils
         return builder.toString();
     }
 
+    @Impure
     public static void checkArgument(boolean expression, String errorMessage)
     {
         checkArgument(expression, () -> errorMessage);
     }
 
+    @Impure
     public static void checkArgument(boolean expression, Supplier<String> errorMessage)
     {
         if (!expression) {

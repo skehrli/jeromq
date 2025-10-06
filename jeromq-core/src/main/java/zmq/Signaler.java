@@ -1,5 +1,10 @@
 package zmq;
 
+import org.checkerframework.checker.collectionownership.qual.NotOwningCollection;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -19,11 +24,13 @@ import zmq.util.Utils;
 //  to signal_fd there can be at most one signal in the signaler at any
 //  given moment. Attempt to send a signal before receiving the previous
 //  one will result in undefined behaviour.
+@InheritableMustCall("close")
 final class Signaler implements Closeable
 {
     private interface IoOperation<O>
     {
-        O call() throws IOException;
+        @Pure
+        O call(Signaler.@NotOwningCollection IoOperation<O> this) throws IOException;
     }
 
     //  Underlying write & read file descriptor.
@@ -41,6 +48,7 @@ final class Signaler implements Closeable
     private final int   pid;
     private final Ctx   ctx;
 
+    @Impure
     Signaler(Ctx ctx, int pid, Errno errno)
     {
         this.ctx = ctx;
@@ -65,7 +73,8 @@ final class Signaler implements Closeable
         }
     }
 
-    private <O> O maksInterrupt(IoOperation<O> operation) throws IOException
+    @Impure
+    private <O> O maksInterrupt(@NotOwningCollection IoOperation<O> operation) throws IOException
     {
         // This loop try to protect the current thread from external interruption.
         // If it happens, it mangles current context internal state.
@@ -87,6 +96,7 @@ final class Signaler implements Closeable
         }
     }
 
+    @Impure
     @Override
     public void close() throws IOException
     {
@@ -120,11 +130,14 @@ final class Signaler implements Closeable
         }
     }
 
+    @NotOwning
+    @Pure
     SelectableChannel getFd()
     {
         return r;
     }
 
+    @Impure
     void send()
     {
         int nbytes = 0;
@@ -141,6 +154,7 @@ final class Signaler implements Closeable
         wcursor.incrementAndGet();
     }
 
+    @Impure
     boolean waitEvent(long timeout)
     {
         // Transform a interrupt signal in an errno EINTR
@@ -192,6 +206,7 @@ final class Signaler implements Closeable
         return true;
     }
 
+    @Impure
     void recv()
     {
         int nbytes = 0;
@@ -213,6 +228,7 @@ final class Signaler implements Closeable
         rcursor++;
     }
 
+    @Pure
     @Override
     public String toString()
     {

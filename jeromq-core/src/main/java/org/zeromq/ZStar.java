@@ -1,5 +1,9 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.Pure;
 import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +76,7 @@ public class ZStar implements ZAgent
          * Hint:       Can be used to initialize the service, or ...<br>
          * Key point:  no loop has started already.
          */
+        @Impure
         void prepare();
 
         /**
@@ -81,6 +86,7 @@ public class ZStar implements ZAgent
          *
          * @return the number of events to process
          */
+        @Impure
         int breathe();
 
         /**
@@ -92,6 +98,7 @@ public class ZStar implements ZAgent
          * @param events the number of events to process
          * @return true to continue till the end of the act, false to stop loopS here.
          */
+        @Pure
         boolean act(int events);
 
         /**
@@ -102,6 +109,7 @@ public class ZStar implements ZAgent
          *
          * @return true to continue acting, false to stop loopS here.
          */
+        @Impure
         boolean entract();
 
         /**
@@ -112,6 +120,7 @@ public class ZStar implements ZAgent
          *
          * @return true to restart acting, false to leave here
          */
+        @Impure
         boolean renews();
     }
 
@@ -126,10 +135,12 @@ public class ZStar implements ZAgent
          *
          * @param ctx the shadow context
          */
+        @SideEffectFree
         void party(ZContext ctx);
     }
 
     // party time easily done. Wait for the specified amount of time
+    @Impure
     public static void party(long time, TimeUnit unit)
     {
         ZMQ.sleep(time, unit);
@@ -149,6 +160,7 @@ public class ZStar implements ZAgent
          *
          * @return the name of the upcoming performance.
          */
+        @Impure
         String premiere(Socket mic, Object... args);
 
         /**
@@ -165,6 +177,7 @@ public class ZStar implements ZAgent
          *
          * @deprecated use {@link #create(ZContext, Socket, int, Star, Object...)} instead.
          */
+        @Impure
         @Deprecated
         default Star create(ZContext ctx, Socket mic, Selector sel, int count, Star previous, Object... args)
         {
@@ -182,6 +195,7 @@ public class ZStar implements ZAgent
          *
          * @return a new star is born!
          */
+        @Impure
         Star create(ZContext ctx, Socket mic, int count, Star previous, Object... args);
 
         /**
@@ -191,6 +205,7 @@ public class ZStar implements ZAgent
          * @param mic  the pipe to the Corbeille side
          * @return true to allow to spread the word and close all future communications
          */
+        @Impure
         boolean interview(Socket mic);
 
     }
@@ -203,6 +218,7 @@ public class ZStar implements ZAgent
         /**
          * Causes the current thread to wait in blocking mode until the end of the remote operations.
          */
+        @Impure
         void awaitSilent();
 
         /**
@@ -220,6 +236,7 @@ public class ZStar implements ZAgent
          * @throws InterruptedException if the current thread is interrupted
          *         while waiting
          */
+        @Impure
         void await() throws InterruptedException;
 
         /**
@@ -245,12 +262,14 @@ public class ZStar implements ZAgent
          * @throws InterruptedException if the current thread is interrupted
          *         while waiting
          */
+        @Impure
         boolean await(long timeout, TimeUnit unit) throws InterruptedException;
 
         /**
          * Checks in non-blocking mode, if the remote operations have ended.
          * @return true if the runnable where the remote operations occurred if finished, otherwise false.
          */
+        @Impure
         boolean isExited();
     }
 
@@ -260,6 +279,7 @@ public class ZStar implements ZAgent
      *
      * @return the agent/mailbox used to send and receive control messages to and from the star.
      */
+    @Pure
     public ZAgent agent()
     {
         return agent;
@@ -269,6 +289,7 @@ public class ZStar implements ZAgent
      * Returns the control of the proper exit of the remote operations.
      * @return a structure used for checking the end of the remote operations.
      */
+    @Pure
     public Exit exit()
     {
         return plateau;
@@ -283,6 +304,7 @@ public class ZStar implements ZAgent
      * @param bags       the optional arguments that will be passed to the distant star
      * @deprecated use {@link ZStar#ZStar(Fortune, String, Object...)} instead.
      */
+    @Impure
     @Deprecated
     public ZStar(SelectorCreator selector, Fortune fortune, String motdelafin, Object... bags)
     {
@@ -296,6 +318,7 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
+    @Impure
     public ZStar(final Fortune fortune, String motdelafin, final Object... bags)
     {
         this((ZContext) null, fortune, motdelafin, bags);
@@ -315,6 +338,7 @@ public class ZStar implements ZAgent
      * @param bags       the optional arguments that will be passed to the distant star
      * @deprecated use {@link ZStar#ZStar(ZContext, Fortune, String, Object...)} instead.
      */
+    @Impure
     @Deprecated
     public ZStar(final ZContext context, final SelectorCreator selector, final Fortune fortune, String motdelafin,
                  final Object... bags)
@@ -334,6 +358,7 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
+    @Impure
     public ZStar(final ZContext context, final Fortune fortune, String motdelafin, final Object... bags)
     {
         this(context, fortune, ZAgent.Creator::create, motdelafin, bags);
@@ -354,6 +379,7 @@ public class ZStar implements ZAgent
      * @param bags       the optional arguments that will be passed to the distant star
      * @deprecated use {@link ZStar#ZStar(ZContext, Fortune, BiFunction, String, Object...)} instead.
      */
+    @Impure
     @Deprecated
     public ZStar(final ZContext context, final SelectorCreator selector, final Fortune fortune,
                  BiFunction<Socket, String, ZAgent> agent, String motdelafin, final Object... bags)
@@ -374,6 +400,7 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
+    @Impure
     public ZStar(final ZContext context, final Fortune fortune, BiFunction<Socket, String, ZAgent> agent,
                  String motdelafin, final Object... bags)
     {
@@ -440,6 +467,7 @@ public class ZStar implements ZAgent
      * @param secret  the specific keyword indicating the death of the star and locking the agent. Null to override the lock mechanism.
      * @return the newly created agent for the star.
      */
+    @Impure
     @Deprecated
     protected ZAgent agent(Socket phone, String secret)
     {
@@ -457,8 +485,9 @@ public class ZStar implements ZAgent
         // waiting-flag for the end of the remote operations
         private final CountDownLatch exit = new CountDownLatch(1);
 
+        @Impure
         @Override
-        public void run(final Object[] train, final ZContext chef, final Socket mic)
+        public void run(final Object[] train, final @Owning ZContext chef, final Socket mic)
         {
             final int mandat = 5;
 
@@ -528,6 +557,7 @@ public class ZStar implements ZAgent
         /******************************************************************************/
 
         // starts the performance
+        @Impure
         private void showMustGoOn(final ZContext chef, final Set set, final Socket phone, final Fortune fortune,
                                   final Object... bags)
         {
@@ -568,6 +598,7 @@ public class ZStar implements ZAgent
         /******************************************************************************/
         // NB: never use green color on the stage floor of a french theater. Or something bad will happen...
 
+        @Impure
         @Override
         public void awaitSilent()
         {
@@ -579,18 +610,21 @@ public class ZStar implements ZAgent
             }
         }
 
+        @Impure
         @Override
         public void await() throws InterruptedException
         {
             exit.await();
         }
 
+        @Impure
         @Override
         public boolean await(long timeout, TimeUnit unit) throws InterruptedException
         {
             return exit.await(timeout, unit);
         }
 
+        @Impure
         @Override
         public boolean isExited()
         {
@@ -598,60 +632,70 @@ public class ZStar implements ZAgent
         }
     }
 
+    @Impure
     @Override
     public ZMsg recv()
     {
         return agent.recv();
     }
 
+    @Impure
     @Override
     public ZMsg recv(int timeout)
     {
         return agent.recv(timeout);
     }
 
+    @Impure
     @Override
     public ZMsg recv(boolean wait)
     {
         return agent.recv(wait);
     }
 
+    @Impure
     @Override
     public boolean send(ZMsg message)
     {
         return agent.send(message);
     }
 
+    @Impure
     @Override
     public boolean send(ZMsg msg, boolean destroy)
     {
         return agent.send(msg, destroy);
     }
 
+    @Impure
     @Override
     public boolean send(String word)
     {
         return agent.send(word);
     }
 
+    @Impure
     @Override
     public boolean send(String word, boolean more)
     {
         return agent.send(word, more);
     }
 
+    @Impure
     @Override
     public Socket pipe()
     {
         return agent.pipe();
     }
 
+    @Impure
     @Override
     public boolean sign()
     {
         return agent.sign();
     }
 
+    @Impure
     @Override
     public void close()
     {
@@ -665,23 +709,27 @@ public class ZStar implements ZAgent
          * @param name the name of the performance.
          * @param id the performance number.
          */
+        @Impure
         void lights(String name, int id);
 
         /**
          * Is the set on fire ?
          * @return true if it is time to leave the place.
          */
+        @Impure
         boolean fire();
     }
 
     public static class SimpleSet implements Set
     {
+        @Impure
         @Override
         public boolean fire()
         {
             return Thread.currentThread().isInterrupted();
         }
 
+        @Impure
         @Override
         public void lights(String name, int id)
         {
@@ -691,6 +739,7 @@ public class ZStar implements ZAgent
             Thread.currentThread().setName(name);
         }
 
+        @SideEffectFree
         public static String createDefaultName(final String format, final int id)
         {
             return String.format(format, id);
@@ -711,6 +760,7 @@ public class ZStar implements ZAgent
          * @param phone      the socket used to communicate with the Agent
          * @param bags       the optional arguments that were passed at the creation
          */
+        @SideEffectFree
         void breakaleg(ZContext ctx, Fortune fortune, Socket phone, Object... bags);
 
         // well ...

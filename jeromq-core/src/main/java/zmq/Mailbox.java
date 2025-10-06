@@ -1,5 +1,11 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 import java.util.Deque;
@@ -7,6 +13,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 import zmq.util.Errno;
 
+@InheritableMustCall("close")
 public class Mailbox implements IMailbox
 {
     //  The pipe to store actual commands.
@@ -14,6 +21,7 @@ public class Mailbox implements IMailbox
 
     //  Signaler to pass signals from writer thread to reader thread.
     // kept it although a ConcurrentLinkedDeque, because the signaler channel is used in many places.
+    @Owning
     private final Signaler signaler;
 
     // mailbox name, for better debugging
@@ -21,6 +29,7 @@ public class Mailbox implements IMailbox
 
     private final Errno errno;
 
+    @Impure
     public Mailbox(Ctx ctx, String name, int tid)
     {
         this.errno = ctx.errno();
@@ -30,11 +39,14 @@ public class Mailbox implements IMailbox
         this.name = name;
     }
 
+    @Pure
+    @Impure
     public SelectableChannel getFd()
     {
         return signaler.getFd();
     }
 
+    @Impure
     @Override
     public void send(final Command cmd)
     {
@@ -42,6 +54,7 @@ public class Mailbox implements IMailbox
         signaler.send();
     }
 
+    @Impure
     @Override
     public Command recv(long timeout)
     {
@@ -68,12 +81,15 @@ public class Mailbox implements IMailbox
         return cmd;
     }
 
+    @EnsuresCalledMethods(value="this.signaler", methods="close")
+    @Impure
     @Override
     public void close() throws IOException
     {
         signaler.close();
     }
 
+    @SideEffectFree
     @Override
     public String toString()
     {

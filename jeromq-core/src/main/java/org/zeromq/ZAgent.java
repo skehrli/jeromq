@@ -1,5 +1,12 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.util.Arrays;
@@ -28,6 +35,7 @@ public interface ZAgent
      *
      * @return the received message or null if the context was shut down.
      */
+    @Impure
     ZMsg recv();
 
     /**
@@ -37,6 +45,7 @@ public interface ZAgent
      * @param timeout the timeout in milliseconds before returning null.
      * @return the received message or null if the context was shut down or if no message after the timeout.
      */
+    @Impure
     ZMsg recv(int timeout);
 
     /**
@@ -46,6 +55,7 @@ public interface ZAgent
      * @param wait   true to make a blocking call, false to not wait, and possibly return null
      * @return the received message or null if the context was shut down or if there is no message when not blocking.
      */
+    @Impure
     ZMsg recv(boolean wait);
 
     /**
@@ -54,6 +64,7 @@ public interface ZAgent
      * @param message    the message to send
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
      */
+    @Impure
     boolean send(ZMsg message);
 
     /**
@@ -63,6 +74,7 @@ public interface ZAgent
      * @param destroy   true to destroy the message after sending it.
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
      */
+    @Impure
     boolean send(ZMsg msg, boolean destroy);
 
     /**
@@ -71,6 +83,7 @@ public interface ZAgent
      * @param word    the message to send
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
      */
+    @Impure
     boolean send(String word);
 
     /**
@@ -80,6 +93,7 @@ public interface ZAgent
      * @param more   true to send more strings in a single message
      * @return true if the message was sent, otherwise false (if the distant Star is dead for example)
      */
+    @Impure
     boolean send(String word, boolean more);
 
     /**
@@ -87,6 +101,7 @@ public interface ZAgent
      *
      * @return true if here, otherwise false
      */
+    @Impure
     boolean sign();
 
     /**
@@ -95,20 +110,24 @@ public interface ZAgent
      *
      * @return the socket used to communicate with the distant Star.
      */
+    @Impure
     Socket pipe();
 
     /**
      * Closes the pipe.
      */
+    @Impure
     void close();
 
     class Creator
     {
+        @SideEffectFree
         private Creator()
         {
             super();
         }
 
+        @Impure
         public static ZAgent create(Socket pipe, String lock)
         {
             return new SimpleAgent(pipe, lock);
@@ -118,9 +137,11 @@ public interface ZAgent
     /**
      * Creates a very simple agent with an easy lock mechanism.
      */
+    @InheritableMustCall({"close", "recv"})
     final class SimpleAgent implements ZAgent
     {
         // the pipe used for communicating with the star
+        @Owning
         private final Socket pipe;
 
         // the key used to lock the agent.
@@ -135,18 +156,22 @@ public interface ZAgent
          * @param pipe   the pipe used to send control messages to the distant IStar.
          * @param lock   the lock to use. If null, the locking mechanism is omitted.
          */
+        @SideEffectFree
         public SimpleAgent(Socket pipe, String lock)
         {
             this.pipe = pipe;
             this.lock = lock == null ? null : lock.getBytes(ZMQ.CHARSET);
         }
 
+        @Pure
         @Override
         public boolean sign()
         {
             return !locked;
         }
 
+        @EnsuresCalledMethods(value="this.pipe", methods="close")
+        @Impure
         @Override
         public void close()
         {
@@ -154,12 +179,14 @@ public interface ZAgent
             pipe.close();
         }
 
+        @Impure
         @Override
         public ZMsg recv()
         {
             return recv(true);
         }
 
+        @Impure
         @Override
         public ZMsg recv(int timeout)
         {
@@ -172,6 +199,8 @@ public interface ZAgent
             return msg;
         }
 
+        @EnsuresCalledMethods(value="this.pipe", methods="close")
+        @Impure
         @Override
         public ZMsg recv(boolean wait)
         {
@@ -202,6 +231,7 @@ public interface ZAgent
             }
         }
 
+        @Impure
         @Override
         public boolean send(ZMsg message)
         {
@@ -211,6 +241,7 @@ public interface ZAgent
             return message.send(pipe);
         }
 
+        @Impure
         @Override
         public boolean send(String word)
         {
@@ -220,6 +251,7 @@ public interface ZAgent
             return pipe.send(word);
         }
 
+        @Impure
         @Override
         public boolean send(String word, boolean more)
         {
@@ -229,6 +261,7 @@ public interface ZAgent
             return pipe.send(word, more ? ZMQ.SNDMORE : 0);
         }
 
+        @Impure
         @Override
         public boolean send(ZMsg msg, boolean destroy)
         {
@@ -238,6 +271,8 @@ public interface ZAgent
             return msg.send(pipe, destroy);
         }
 
+        @NotOwning
+        @Pure
         @Override
         public Socket pipe()
         {
@@ -260,6 +295,7 @@ public interface ZAgent
          * @return the opened selector.
          * @throws IOException
          */
+        @Pure
         Selector create() throws IOException;
 
         /**
@@ -268,6 +304,7 @@ public interface ZAgent
          * @param selector the selector to close
          * @throws IOException
          */
+        @SideEffectFree
         void destroy(Selector selector) throws IOException;
     }
 }

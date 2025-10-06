@@ -1,5 +1,8 @@
 package zmq;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -443,11 +446,13 @@ public class ZMQ
      */
     public interface EventConsummer
     {
+        @Impure
         void consume(Event ev);
 
         /**
          * An optional method to close the monitor if needed
          */
+        @Impure
         default void close()
         {
             // Default do nothing
@@ -464,6 +469,7 @@ public class ZMQ
         public final Object arg;
         private final int   flag;
 
+        @SideEffectFree
         public Event(int event, String addr, Object arg)
         {
             this.event = event;
@@ -480,6 +486,7 @@ public class ZMQ
             }
         }
 
+        @SideEffectFree
         private Event(int event, String addr, Object arg, int flag)
         {
             this.event = event;
@@ -488,12 +495,14 @@ public class ZMQ
             this.flag = flag;
         }
 
+        @Impure
         public boolean write(SocketBase s)
         {
             Msg msg = new Msg(serialize(s.getCtx()));
             return s.send(msg, 0);
         }
 
+        @Impure
         private ByteBuffer serialize(Ctx ctx)
         {
             int size = 4 + 1 + addr.length() + 1; // event + len(addr) + addr + flag
@@ -528,6 +537,7 @@ public class ZMQ
          * @param socket the socket that send the event
          * @return the channel in the event, or null if was not a channel event.
          */
+        @Impure
         public SelectableChannel getChannel(SocketBase socket)
         {
             return getChannel(socket.getCtx());
@@ -544,6 +554,7 @@ public class ZMQ
          * @param ctx the socket that send the event
          * @return the channel in the event, or null if was not a channel event.
          */
+        @Impure
         public SelectableChannel getChannel(Ctx ctx)
         {
             if (flag == VALUE_CHANNEL) {
@@ -554,6 +565,7 @@ public class ZMQ
             }
         }
 
+        @Impure
         public static Event read(SocketBase s, int flags)
         {
             Msg msg = s.recv(flags);
@@ -577,6 +589,7 @@ public class ZMQ
             return new Event(event, new String(addr, CHARSET), arg, flag);
         }
 
+        @Impure
         public static Event read(SocketBase s)
         {
             return read(s, 0);
@@ -584,12 +597,15 @@ public class ZMQ
     }
 
     //  New context API
+    @Impure
     public static Ctx createContext()
     {
         //  Create 0MQ context.
         return new Ctx();
     }
 
+    @SideEffectFree
+    @Impure
     private static void checkContext(Ctx ctx)
     {
         if (ctx == null || !ctx.isActive()) {
@@ -597,18 +613,22 @@ public class ZMQ
         }
     }
 
+    @Impure
     private static void destroyContext(Ctx ctx)
     {
         checkContext(ctx);
         ctx.terminate();
     }
 
+    @Impure
     public static void setContextOption(Ctx ctx, int option, int optval)
     {
         checkContext(ctx);
         ctx.set(option, optval);
     }
 
+    @SideEffectFree
+    @Impure
     public static int getContextOption(Ctx ctx, int option)
     {
         checkContext(ctx);
@@ -616,6 +636,7 @@ public class ZMQ
     }
 
     //  Stable/legacy context API
+    @Impure
     public static Ctx init(int ioThreads)
     {
         Utils.checkArgument(ioThreads >= 0, "I/O threads must not be negative");
@@ -624,18 +645,22 @@ public class ZMQ
         return ctx;
     }
 
+    @Impure
     public static void term(Ctx ctx)
     {
         destroyContext(ctx);
     }
 
     // Sockets
+    @Impure
     public static SocketBase socket(Ctx ctx, int type)
     {
         checkContext(ctx);
         return ctx.createSocket(type);
     }
 
+    @SideEffectFree
+    @Impure
     private static void checkSocket(SocketBase s)
     {
         if (s == null || !s.isActive()) {
@@ -643,6 +668,7 @@ public class ZMQ
         }
     }
 
+    @Impure
     public static void closeZeroLinger(SocketBase s)
     {
         checkSocket(s);
@@ -650,29 +676,34 @@ public class ZMQ
         s.close();
     }
 
+    @Impure
     public static void close(SocketBase s)
     {
         checkSocket(s);
         s.close();
     }
 
+    @Impure
     public static boolean setSocketOption(SocketBase s, int option, Object optval)
     {
         checkSocket(s);
         return s.setSocketOpt(option, optval);
     }
 
+    @Impure
     public static Object getSocketOptionExt(SocketBase s, int option)
     {
         checkSocket(s);
         return s.getSocketOptx(option);
     }
 
+    @Impure
     public static int getSocketOption(SocketBase s, int opt)
     {
         return s.getSocketOpt(opt);
     }
 
+    @Impure
     public static boolean monitorSocket(SocketBase s, final String addr, int events)
     {
         checkSocket(s);
@@ -680,6 +711,7 @@ public class ZMQ
         return s.monitor(addr, events);
     }
 
+    @Impure
     public static boolean bind(SocketBase s, final String addr)
     {
         checkSocket(s);
@@ -687,30 +719,35 @@ public class ZMQ
         return s.bind(addr);
     }
 
+    @Impure
     public static boolean connect(SocketBase s, String addr)
     {
         checkSocket(s);
         return s.connect(addr);
     }
 
+    @Impure
     public static int connectPeer(SocketBase s, String addr)
     {
         checkSocket(s);
         return s.connectPeer(addr);
     }
 
+    @Impure
     public static boolean disconnectPeer(SocketBase s, int routingId)
     {
         checkSocket(s);
         return s.disconnectPeer(routingId);
     }
 
+    @Impure
     public static boolean unbind(SocketBase s, String addr)
     {
         checkSocket(s);
         return s.termEndpoint(addr);
     }
 
+    @Impure
     public static boolean disconnect(SocketBase s, String addr)
     {
         checkSocket(s);
@@ -718,12 +755,14 @@ public class ZMQ
     }
 
     // Sending functions.
+    @Impure
     public static int send(SocketBase s, String str, int flags)
     {
         byte[] data = str.getBytes(CHARSET);
         return send(s, data, data.length, flags);
     }
 
+    @Impure
     public static int send(SocketBase s, Msg msg, int flags)
     {
         int rc = sendMsg(s, msg, flags);
@@ -734,11 +773,13 @@ public class ZMQ
         return rc;
     }
 
+    @Impure
     public static int send(SocketBase s, byte[] buf, int flags)
     {
         return send(s, buf, buf.length, flags);
     }
 
+    @Impure
     public static int send(SocketBase s, byte[] buf, int len, int flags)
     {
         checkSocket(s);
@@ -760,6 +801,7 @@ public class ZMQ
     // a single multi-part message, i.e. the last message has
     // ZMQ_SNDMORE bit switched off.
     //
+    @Impure
     public int sendiov(SocketBase s, byte[][] a, int count, int flags)
     {
         checkSocket(s);
@@ -781,6 +823,7 @@ public class ZMQ
 
     }
 
+    @Impure
     public static boolean sendMsg(SocketBase socket, byte[]... data)
     {
         int rc;
@@ -797,6 +840,7 @@ public class ZMQ
         return rc >= 0;
     }
 
+    @Impure
     public static int sendMsg(SocketBase s, Msg msg, int flags)
     {
         int sz = msgSize(msg);
@@ -808,6 +852,7 @@ public class ZMQ
     }
 
     // Receiving functions.
+    @Impure
     public static Msg recv(SocketBase s, int flags)
     {
         checkSocket(s);
@@ -834,6 +879,7 @@ public class ZMQ
     // We assume it is safe to steal these buffers by simply
     // not closing the zmq::msg_t.
     //
+    @Impure
     public int recviov(SocketBase s, byte[][] a, int count, int flags)
     {
         checkSocket(s);
@@ -859,38 +905,47 @@ public class ZMQ
         return nread;
     }
 
+    @Impure
     public static Msg recvMsg(SocketBase s, int flags)
     {
         return s.recv(flags);
     }
 
+    @Impure
     public static boolean join(SocketBase s, String group)
     {
         checkSocket(s);
         return s.join(group);
     }
 
+    @Impure
     public static boolean leave(SocketBase s, String group)
     {
         checkSocket(s);
         return s.leave(group);
     }
 
+    @Impure
     public static Msg msgInit()
     {
         return new Msg();
     }
 
+    @Impure
     public static Msg msgInitWithSize(int messageSize)
     {
         return new Msg(messageSize);
     }
 
+    @Pure
+    @Impure
     public static int msgSize(Msg msg)
     {
         return msg.size();
     }
 
+    @Pure
+    @Impure
     public static int getMessageOption(Msg msg, int option)
     {
         switch (option) {
@@ -902,6 +957,8 @@ public class ZMQ
     }
 
     //  Get message metadata string
+    @Pure
+    @Impure
     public static String getMessageMetadata(Msg msg, String property)
     {
         String data = null;
@@ -913,37 +970,46 @@ public class ZMQ
     }
 
     //  Set routing id on a message sent over SERVER socket type
+    @Impure
     public boolean setMessageRoutingId(Msg msg, int routingId)
     {
         return msg.setRoutingId(routingId);
     }
 
     //  Get the routing id of a message that came from SERVER socket type
+    @Pure
+    @Impure
     public int getMessageRoutingId(Msg msg)
     {
         return msg.getRoutingId();
     }
 
+    @Impure
     public boolean setMessageGroup(Msg msg, String group)
     {
         return msg.setGroup(group);
     }
 
+    @Pure
+    @Impure
     public String getMessageGroup(Msg msg)
     {
         return msg.getGroup();
     }
 
+    @Impure
     public static void sleep(long seconds)
     {
         sleep(seconds, TimeUnit.SECONDS);
     }
 
+    @Impure
     public static void msleep(long milliseconds)
     {
         sleep(milliseconds, TimeUnit.MILLISECONDS);
     }
 
+    @Impure
     public static void sleep(long amount, TimeUnit unit)
     {
         LockSupport.parkNanos(TimeUnit.NANOSECONDS.convert(amount, unit));
@@ -958,6 +1024,7 @@ public class ZMQ
      * @param timeout
      * @return number of events
      */
+    @Impure
     public static int poll(Selector selector, PollItem[] items, long timeout)
     {
         return poll(selector, items, items.length, timeout);
@@ -973,6 +1040,7 @@ public class ZMQ
      * @param timeout
      * @return number of events
      */
+    @Impure
     public static int poll(Selector selector, PollItem[] items, int count, long timeout)
     {
         Utils.checkArgument(items != null, "items have to be supplied for polling");
@@ -1124,6 +1192,7 @@ public class ZMQ
     }
 
     //  The proxy functionality
+    @Impure
     public static boolean proxy(SocketBase frontend, SocketBase backend, SocketBase capture)
     {
         Utils.checkArgument(frontend != null, "Frontend socket has to be present for proxy");
@@ -1131,6 +1200,7 @@ public class ZMQ
         return Proxy.proxy(frontend, backend, capture, null);
     }
 
+    @Impure
     public static boolean proxy(SocketBase frontend, SocketBase backend, SocketBase capture, SocketBase control)
     {
         Utils.checkArgument(frontend != null, "Frontend socket has to be present for proxy");
@@ -1138,6 +1208,7 @@ public class ZMQ
         return Proxy.proxy(frontend, backend, capture, control);
     }
 
+    @Impure
     public static boolean device(int device, SocketBase frontend, SocketBase backend)
     {
         Utils.checkArgument(frontend != null, "Frontend socket has to be present for proxy");
@@ -1145,21 +1216,25 @@ public class ZMQ
         return Proxy.proxy(frontend, backend, null, null);
     }
 
+    @Impure
     public static long startStopwatch()
     {
         return System.nanoTime();
     }
 
+    @Impure
     public static long stopStopwatch(long watch)
     {
         return (System.nanoTime() - watch) / 1000;
     }
 
+    @Pure
     public static int makeVersion(int major, int minor, int patch)
     {
         return ((major) * 10000 + (minor) * 100 + (patch));
     }
 
+    @Pure
     public static String strerror(int errno)
     {
         return "Errno = " + errno;

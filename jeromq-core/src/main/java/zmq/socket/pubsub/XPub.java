@@ -1,5 +1,7 @@
 package zmq.socket.pubsub;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -17,6 +19,7 @@ public class XPub extends SocketBase
 {
     private static final class SendUnsubscription implements IMtrieHandler
     {
+        @Impure
         @Override
         public void invoke(Pipe pipe, byte[] data, int size, XPub self)
         {
@@ -26,6 +29,7 @@ public class XPub extends SocketBase
 
     private static final class MarkAsMatching implements IMtrieHandler
     {
+        @Impure
         @Override
         public void invoke(Pipe pipe, byte[] data, int size, XPub self)
         {
@@ -73,6 +77,7 @@ public class XPub extends SocketBase
     private static final IMtrieHandler markAsMatching     = new MarkAsMatching();
     private static final IMtrieHandler sendUnsubscription = new SendUnsubscription();
 
+    @Impure
     public XPub(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
@@ -93,6 +98,7 @@ public class XPub extends SocketBase
         pendingFlags = new ArrayDeque<>();
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribeToAll, boolean isLocallyInitiated)
     {
@@ -110,6 +116,7 @@ public class XPub extends SocketBase
         xreadActivated(pipe);
     }
 
+    @Impure
     @Override
     protected void xreadActivated(Pipe pipe)
     {
@@ -167,12 +174,14 @@ public class XPub extends SocketBase
         }
     }
 
+    @Impure
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
         dist.activated(pipe);
     }
 
+    @Impure
     @Override
     public boolean xsetsockopt(int option, Object optval)
     {
@@ -213,6 +222,7 @@ public class XPub extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -232,11 +242,13 @@ public class XPub extends SocketBase
         dist.terminated(pipe);
     }
 
+    @Impure
     private void markAsMatching(Pipe pipe)
     {
         dist.match(pipe);
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -267,12 +279,15 @@ public class XPub extends SocketBase
         return false;
     }
 
+    @Pure
+    @Impure
     @Override
     protected boolean xhasOut()
     {
         return dist.hasOut();
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -294,12 +309,14 @@ public class XPub extends SocketBase
         return msg;
     }
 
+    @Pure
     @Override
     protected boolean xhasIn()
     {
         return !pendingData.isEmpty();
     }
 
+    @Impure
     private void sendUnsubscription(byte[] data, int size)
     {
         if (options.type != ZMQ.ZMQ_PUB) {

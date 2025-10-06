@@ -1,5 +1,11 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.dataflow.qual.SideEffectFree;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -36,18 +42,21 @@ import zmq.util.function.Supplier;
 
 // This engine handles any socket with SOCK_STREAM semantics,
 // e.g. TCP socket or an UNIX domain socket.
+@InheritableMustCall("destroy")
 public class StreamEngine implements IEngine, IPollEvents
 {
     private final class ProducePongMessage implements Supplier<Msg>
     {
         private final byte[] pingContext;
 
+        @SideEffectFree
         public ProducePongMessage(byte[] pingContext)
         {
             assert (pingContext != null);
             this.pingContext = pingContext;
         }
 
+        @Impure
         @Override
         public Msg get()
         {
@@ -65,6 +74,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
         private final byte revision;
 
+        @Impure
         Protocol(int revision)
         {
             this.revision = (byte) revision;
@@ -81,6 +91,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private IOObject ioObject;
 
     //  Underlying socket.
+    @Owning
     private SocketChannel fd;
 
     private Poller.Handle handle;
@@ -167,6 +178,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Errno errno;
 
+    @Impure
     public StreamEngine(SocketChannel fd, final Options options, final String endpoint)
     {
         this.errno = options.errno;
@@ -199,6 +211,7 @@ public class StreamEngine implements IEngine, IPollEvents
         heartbeatContext = Arrays.copyOf(options.heartbeatContext, options.heartbeatContext.length);
     }
 
+    @Pure
     private int heartbeatTimeout()
     {
         int timeout = 0;
@@ -211,6 +224,8 @@ public class StreamEngine implements IEngine, IPollEvents
         return timeout;
     }
 
+    @EnsuresCalledMethods(value="this.fd", methods="close")
+    @Impure
     public void destroy()
     {
         assert (!plugged);
@@ -235,6 +250,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void plug(IOThread ioThread, SessionBase session)
     {
@@ -316,6 +332,7 @@ public class StreamEngine implements IEngine, IPollEvents
         inEvent();
     }
 
+    @Impure
     private <T> T instantiate(Class<T> clazz, int size, long max)
     {
         if (clazz == null) {
@@ -331,6 +348,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private void unplug()
     {
         assert (plugged);
@@ -369,6 +387,7 @@ public class StreamEngine implements IEngine, IPollEvents
         session = null;
     }
 
+    @Impure
     @Override
     public void terminate()
     {
@@ -376,6 +395,7 @@ public class StreamEngine implements IEngine, IPollEvents
         destroy();
     }
 
+    @Impure
     @Override
     public void inEvent()
     {
@@ -464,6 +484,7 @@ public class StreamEngine implements IEngine, IPollEvents
         session.flush();
     }
 
+    @Impure
     @Override
     public void outEvent()
     {
@@ -534,6 +555,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void restartOutput()
     {
@@ -553,6 +575,7 @@ public class StreamEngine implements IEngine, IPollEvents
         outEvent();
     }
 
+    @Impure
     @Override
     public void restartInput()
     {
@@ -590,6 +613,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private boolean decodeCurrentInputs()
     {
         while (insize > 0) {
@@ -611,6 +635,7 @@ public class StreamEngine implements IEngine, IPollEvents
     }
 
     //  Detects the protocol used by the peer.
+    @Impure
     private boolean handshake()
     {
         assert (handshaking);
@@ -836,6 +861,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return true;
     }
 
+    @Impure
     private void decodeDataAfterHandshake(int greetingSize)
     {
         final int pos = greetingRecv.position();
@@ -849,6 +875,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private Msg identityMsg()
     {
         Msg msg = new Msg(options.identitySize);
@@ -859,6 +886,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return msg;
     }
 
+    @Impure
     private boolean processIdentityMsg(Msg msg)
     {
         if (options.recvIdentity) {
@@ -883,6 +911,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Function<Msg, Boolean> processIdentity = this::processIdentityMsg;
 
+    @Impure
     private Msg nextHandshakeCommand()
     {
         assert (mechanism != null);
@@ -911,6 +940,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private boolean processHandshakeCommand(Msg msg)
     {
         assert (mechanism != null);
@@ -937,6 +967,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private final Function<Msg, Boolean> processHandshakeCommand = this::processHandshakeCommand;
     private final Supplier<Msg> nextHandshakeCommand = this::nextHandshakeCommand;
 
+    @Impure
     @Override
     public void zapMsgAvailable()
     {
@@ -955,6 +986,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private void mechanismReady()
     {
         if (options.heartbeatInterval > 0) {
@@ -1004,11 +1036,13 @@ public class StreamEngine implements IEngine, IPollEvents
 
     }
 
+    @Impure
     private Msg pullMsgFromSession()
     {
         return session.pullMsg();
     }
 
+    @Impure
     private boolean pushMsgToSession(Msg msg)
     {
         return session.pushMsg(msg);
@@ -1017,6 +1051,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private final Function<Msg, Boolean> pushMsgToSession = this::pushMsgToSession;
     private final Supplier<Msg> pullMsgFromSession = this::pullMsgFromSession;
 
+    @Impure
     private boolean pushRawMsgToSession(Msg msg)
     {
         if (metadata != null && !metadata.equals(msg.getMetadata())) {
@@ -1027,6 +1062,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Function<Msg, Boolean> pushRawMsgToSession = this::pushRawMsgToSession;
 
+    @Impure
     private boolean writeCredential(Msg msg)
     {
         assert (mechanism != null);
@@ -1049,6 +1085,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Function<Msg, Boolean> writeCredential = this::writeCredential;
 
+    @Impure
     private Msg pullAndEncode()
     {
         assert (mechanism != null);
@@ -1064,6 +1101,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Supplier<Msg> pullAndEncode = this::pullAndEncode;
 
+    @Impure
     private boolean decodeAndPush(Msg msg)
     {
         assert (mechanism != null);
@@ -1099,6 +1137,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Function<Msg, Boolean> decodeAndPush = this::decodeAndPush;
 
+    @Impure
     private boolean pushOneThenDecodeAndPush(Msg msg)
     {
         boolean rc = session.pushMsg(msg);
@@ -1113,6 +1152,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private final Supplier<Msg> producePingMessage = this::producePingMessage;
 
     //  Function to handle network disconnections.
+    @Impure
     private void error(ErrorReason error)
     {
         if (options.rawSocket) {
@@ -1130,6 +1170,7 @@ public class StreamEngine implements IEngine, IPollEvents
         destroy();
     }
 
+    @Impure
     private void setHandshakeTimer()
     {
         assert (!hasHandshakeTimer);
@@ -1140,6 +1181,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     @Override
     public void timerEvent(int id)
     {
@@ -1167,6 +1209,7 @@ public class StreamEngine implements IEngine, IPollEvents
         }
     }
 
+    @Impure
     private Msg producePingMessage()
     {
         assert (mechanism != null);
@@ -1189,6 +1232,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return msg;
     }
 
+    @Impure
     private Msg producePongMessage(byte[] pingContext)
     {
         assert (mechanism != null);
@@ -1206,6 +1250,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return msg;
     }
 
+    @Impure
     private boolean processCommand(Msg msg)
     {
         if (Msgs.startsWith(msg, "PING", true)) {
@@ -1214,6 +1259,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return false;
     }
 
+    @Impure
     private boolean processHeartbeatMessage(Msg msg)
     {
         // Get the remote heartbeat TTL to setup the timer
@@ -1248,6 +1294,7 @@ public class StreamEngine implements IEngine, IPollEvents
     //  Writes data to the socket. Returns the number of bytes actually
     //  written (even zero is to be considered to be a success). In case
     //  of error or orderly shutdown by the other peer -1 is returned.
+    @Impure
     private int write(ByteBuffer outbuf)
     {
         int nbytes;
@@ -1268,6 +1315,7 @@ public class StreamEngine implements IEngine, IPollEvents
     //  Reads data from the socket (up to 'size' bytes).
     //  Returns the number of bytes actually read or -1 on error.
     //  Zero indicates the peer has closed the connection.
+    @Impure
     private int read(ByteBuffer buf)
     {
         int nbytes;
@@ -1297,12 +1345,14 @@ public class StreamEngine implements IEngine, IPollEvents
         return nbytes;
     }
 
+    @Pure
     @Override
     public String getEndPoint()
     {
         return endpoint;
     }
 
+    @Impure
     @Override
     public String toString()
     {

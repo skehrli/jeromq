@@ -1,5 +1,7 @@
 package zmq.io.coder;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.Msg;
 import zmq.ZError;
 import zmq.msg.MsgAllocator;
@@ -20,6 +22,7 @@ public abstract class Decoder extends DecoderBase
 {
     private final class MessageReady implements Step
     {
+        @Impure
         @Override
         public Step.Result apply()
         {
@@ -29,6 +32,7 @@ public abstract class Decoder extends DecoderBase
 
     private final class FlagsReady implements Step
     {
+        @Impure
         @Override
         public Step.Result apply()
         {
@@ -38,6 +42,7 @@ public abstract class Decoder extends DecoderBase
 
     private final class EightByteSizeReady implements Step
     {
+        @Impure
         @Override
         public Step.Result apply()
         {
@@ -47,6 +52,7 @@ public abstract class Decoder extends DecoderBase
 
     private final class OneByteSizeReady implements Step
     {
+        @Impure
         @Override
         public Step.Result apply()
         {
@@ -66,6 +72,7 @@ public abstract class Decoder extends DecoderBase
 
     private final MsgAllocator allocator;
 
+    @Impure
     public Decoder(Errno errno, int bufsize, long maxmsgsize, MsgAllocator allocator)
     {
         super(errno, bufsize);
@@ -73,6 +80,7 @@ public abstract class Decoder extends DecoderBase
         this.allocator = allocator;
     }
 
+    @Impure
     protected final Step.Result sizeReady(final long size)
     {
         //  Message size must not exceed the maximum allowed size.
@@ -97,36 +105,43 @@ public abstract class Decoder extends DecoderBase
         return Step.Result.MORE_DATA;
     }
 
+    @Impure
     protected Msg allocate(final int size)
     {
         return allocator.allocate(size);
     }
 
+    @Impure
     protected Step.Result oneByteSizeReady()
     {
         throw new UnsupportedOperationException("Have you forgot to implement oneByteSizeReady ?");
     }
 
+    @Impure
     protected Step.Result eightByteSizeReady()
     {
         throw new UnsupportedOperationException("Have you forgot to implement eightByteSizeReady ?");
     }
 
+    @Impure
     protected Step.Result flagsReady()
     {
         throw new UnsupportedOperationException("Have you forgot to implement flagsReady ?");
     }
 
+    @Impure
     protected Step.Result messageReady()
     {
         throw new UnsupportedOperationException("Have you forgot to implement messageReady ?");
     }
 
+    @Pure
     protected Step.Result messageIncomplete()
     {
         return Step.Result.MORE_DATA;
     }
 
+    @Pure
     @Override
     public Msg msg()
     {

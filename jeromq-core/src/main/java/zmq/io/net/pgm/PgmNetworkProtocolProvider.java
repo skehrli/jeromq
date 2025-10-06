@@ -1,5 +1,7 @@
 package zmq.io.net.pgm;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import java.net.InetSocketAddress;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -19,12 +21,14 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class PgmNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
+    @Pure
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
         return protocol == NetProtocol.pgm;
     }
 
+    @Pure
     @Override
     public Listener getListener(IOThread ioThread, SocketBase socket,
                                 Options options)
@@ -32,12 +36,14 @@ public class PgmNetworkProtocolProvider implements NetworkProtocolProvider<InetS
         return null;
     }
 
+    @Pure
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
         return null;
     }
 
+    @Impure
     @Override
     public void startConnecting(Options options, IOThread ioThread,
                                 SessionBase session, Address<InetSocketAddress> addr,
@@ -69,11 +75,13 @@ public class PgmNetworkProtocolProvider implements NetworkProtocolProvider<InetS
                 }
     }
 
+    @Pure
     protected boolean withUdpEncapsulation()
     {
         return false;
     }
 
+    @Pure
     @Override
     public boolean wantsIOThread()
     {

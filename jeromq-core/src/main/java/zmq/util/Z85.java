@@ -1,10 +1,13 @@
 package zmq.util;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import java.nio.ByteBuffer;
 
 //  Z85 codec, taken from 0MQ RFC project, implements RFC32 Z85 encoding
 public class Z85
 {
+    @SideEffectFree
     private Z85()
     {
     }
@@ -28,6 +31,7 @@ public class Z85
     //  dest. Size must be a multiple of 4.
     //  Returns NULL and sets errno = EINVAL for invalid input.
 
+    @Impure
     public static String encode(byte[] data, int size)
     {
         if (size % 4 != 0) {
@@ -61,6 +65,7 @@ public class Z85
     //  must be a multiple of 5.
     //  Returns NULL and sets errno = EINVAL for invalid input.
 
+    @Impure
     public static byte[] decode(String string)
     {
         if (string.length() % 5 != 0) {

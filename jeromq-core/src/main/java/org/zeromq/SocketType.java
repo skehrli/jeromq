@@ -1,5 +1,7 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.Impure;
 import zmq.util.Draft;
 
 /**
@@ -645,11 +647,13 @@ public enum SocketType
 
     public final int type;
 
+    @Impure
     SocketType(int socketType)
     {
         this.type = socketType;
     }
 
+    @Impure
     public static SocketType type(int baseType)
     {
         for (SocketType type : values()) {
@@ -660,6 +664,7 @@ public enum SocketType
         throw new IllegalArgumentException("no socket type found with value " + baseType);
     }
 
+    @Pure
     public int type()
     {
         return type;

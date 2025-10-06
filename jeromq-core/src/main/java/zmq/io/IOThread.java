@@ -1,5 +1,11 @@
 package zmq.io;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.mustcall.qual.NotOwning;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.checker.mustcall.qual.Owning;
+import org.checkerframework.checker.mustcall.qual.InheritableMustCall;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
@@ -11,9 +17,11 @@ import zmq.ZObject;
 import zmq.poll.IPollEvents;
 import zmq.poll.Poller;
 
+@InheritableMustCall("close")
 public class IOThread extends ZObject implements IPollEvents, Closeable
 {
     //  I/O thread accesses incoming commands via this mailbox.
+    @Owning
     private final Mailbox mailbox;
 
     //  Handle associated with mailbox' file descriptor.
@@ -22,6 +30,7 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
     //  I/O multiplexing is performed using a poller object.
     private final Poller poller;
 
+    @Impure
     public IOThread(Ctx ctx, int tid)
     {
         super(ctx, tid);
@@ -34,11 +43,14 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
         poller.setPollIn(mailboxHandle);
     }
 
+    @Impure
     public void start()
     {
         poller.start();
     }
 
+    @EnsuresCalledMethods(value="this.mailbox", methods="close")
+    @Impure
     @Override
     public void close() throws IOException
     {
@@ -46,21 +58,26 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
         mailbox.close();
     }
 
+    @Impure
     public void stop()
     {
         sendStop();
     }
 
+    @NotOwning
+    @Pure
     public Mailbox getMailbox()
     {
         return mailbox;
     }
 
+    @Impure
     public int getLoad()
     {
         return poller.getLoad();
     }
 
+    @Impure
     @Override
     public void inEvent()
     {
@@ -79,12 +96,14 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
         }
     }
 
+    @Pure
     Poller getPoller()
     {
         assert (poller != null);
         return poller;
     }
 
+    @Impure
     @Override
     protected void processStop()
     {

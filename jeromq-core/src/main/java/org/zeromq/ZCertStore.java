@@ -1,5 +1,6 @@
 package org.zeromq;
 
+import org.checkerframework.dataflow.qual.Impure;
 import org.zeromq.util.ZDigest;
 import org.zeromq.util.ZMetadata;
 
@@ -31,11 +32,13 @@ public class ZCertStore
 {
     public interface Fingerprinter
     {
+        @Impure
         byte[] print(File path);
     }
 
     public static final class Timestamper implements Fingerprinter
     {
+        @Impure
         @Override
         public byte[] print(File path)
         {
@@ -58,6 +61,7 @@ public class ZCertStore
         // temporary buffer used for digest. Instance member for performance reasons.
         private final byte[] buffer = new byte[8192];
 
+        @Impure
         @Override
         public byte[] print(File path)
         {
@@ -81,6 +85,7 @@ public class ZCertStore
             return null;
         }
 
+        @Impure
         private InputStream stream(File path)
         {
             if (path.isFile()) {
@@ -107,6 +112,7 @@ public class ZCertStore
          * @param file the file to visit.
          * @return true to stop the traversal, false to continue.
          */
+        @Impure
         boolean visitFile(File file);
 
         /**
@@ -114,6 +120,7 @@ public class ZCertStore
          * @param dir the directory to visit.
          * @return true to stop the traversal, false to continue.
          */
+        @Impure
         boolean visitDir(File dir);
     }
 
@@ -132,11 +139,13 @@ public class ZCertStore
      * Create a Certificate Store at that file system folder location
      * @param location
      */
+    @Impure
     public ZCertStore(String location)
     {
         this(location, new Timestamper());
     }
 
+    @Impure
     public ZCertStore(String location, Fingerprinter fingerprinter)
     {
         this.finger = fingerprinter;
@@ -144,6 +153,7 @@ public class ZCertStore
         loadFiles();
     }
 
+    @Impure
     private boolean traverseDirectory(File root, IFileVisitor visitor)
     {
         assert (root.exists());
@@ -177,6 +187,7 @@ public class ZCertStore
      * Check if a public key is in the certificate store.
      * @param publicKey needs to be a 32 byte array representing the public key
      */
+    @Impure
     public boolean containsPublicKey(byte[] publicKey)
     {
         Utils.checkArgument(
@@ -190,6 +201,7 @@ public class ZCertStore
      * This method will scan the folder for changes on every call
      * @param publicKey
      */
+    @Impure
     public boolean containsPublicKey(String publicKey)
     {
         Utils.checkArgument(
@@ -199,12 +211,14 @@ public class ZCertStore
         return publicKeys.containsKey(publicKey);
     }
 
+    @Impure
     public ZMetadata getMetadata(String publicKey)
     {
         reloadIfNecessary();
         return publicKeys.get(publicKey);
     }
 
+    @Impure
     private void loadFiles()
     {
         final Map<String, ZMetadata> keys = new HashMap<>();
@@ -215,6 +229,7 @@ public class ZCertStore
 
         traverseDirectory(location, new IFileVisitor()
         {
+            @Impure
             @Override
             public boolean visitFile(File file)
             {
@@ -240,6 +255,7 @@ public class ZCertStore
                 return false;
             }
 
+            @Impure
             @Override
             public boolean visitDir(File dir)
             {
@@ -254,12 +270,14 @@ public class ZCertStore
         fingerprints.putAll(collected);
     }
 
+    @Impure
     int getCertificatesCount()
     {
         reloadIfNecessary();
         return publicKeys.size();
     }
 
+    @Impure
     boolean reloadIfNecessary()
     {
         if (checkForChanges()) {
@@ -272,18 +290,21 @@ public class ZCertStore
     /**
      * Check if files in the certificate folders have been added or removed.
      */
+    @Impure
     boolean checkForChanges()
     {
         // initialize with last checked files
         final Map<File, byte[]> presents = new HashMap<>(fingerprints);
         boolean modified = traverseDirectory(location, new IFileVisitor()
         {
+            @Impure
             @Override
             public boolean visitFile(File file)
             {
                 return modified(presents.remove(file), file);
             }
 
+            @Impure
             @Override
             public boolean visitDir(File dir)
             {
@@ -294,6 +315,7 @@ public class ZCertStore
         return modified || !presents.isEmpty();
     }
 
+    @Impure
     private boolean modified(byte[] fingerprint, File path)
     {
         if (!path.exists()) {

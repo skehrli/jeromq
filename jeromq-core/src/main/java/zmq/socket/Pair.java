@@ -1,5 +1,9 @@
 package zmq.socket;
 
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods;
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -15,12 +19,15 @@ public class Pair extends SocketBase
 
     private Blob savedCredential;
 
+    @Impure
     public Pair(Ctx parent, int tid, int sid)
     {
         super(parent, tid, sid);
         options.type = ZMQ.ZMQ_PAIR;
     }
 
+    @EnsuresCalledMethods(value="this.super", methods="destroy")
+    @Impure
     @Override
     protected void destroy()
     {
@@ -28,6 +35,7 @@ public class Pair extends SocketBase
         assert (pipe == null);
     }
 
+    @Impure
     @Override
     protected void xattachPipe(Pipe pipe, boolean subscribe2all, boolean isLocallyInitiated)
     {
@@ -43,6 +51,7 @@ public class Pair extends SocketBase
         }
     }
 
+    @Impure
     @Override
     protected void xpipeTerminated(Pipe pipe)
     {
@@ -55,6 +64,7 @@ public class Pair extends SocketBase
         }
     }
 
+    @SideEffectFree
     @Override
     protected void xreadActivated(Pipe pipe)
     {
@@ -62,6 +72,7 @@ public class Pair extends SocketBase
         //  There's nothing to do here.
     }
 
+    @SideEffectFree
     @Override
     protected void xwriteActivated(Pipe pipe)
     {
@@ -69,6 +80,7 @@ public class Pair extends SocketBase
         //  There's nothing to do here.
     }
 
+    @Impure
     @Override
     protected boolean xsend(Msg msg)
     {
@@ -84,6 +96,7 @@ public class Pair extends SocketBase
         return true;
     }
 
+    @Impure
     @Override
     protected Msg xrecv()
     {
@@ -106,18 +119,22 @@ public class Pair extends SocketBase
         return msg;
     }
 
+    @Impure
     @Override
     protected boolean xhasIn()
     {
         return pipe != null && pipe.checkRead();
     }
 
+    @Impure
     @Override
     protected boolean xhasOut()
     {
         return pipe != null && pipe.checkWrite();
     }
 
+    @Pure
+    @Impure
     @Override
     protected Blob getCredential()
     {

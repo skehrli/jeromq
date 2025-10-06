@@ -1,5 +1,7 @@
 package zmq.io.mechanism.curve;
 
+import org.checkerframework.dataflow.qual.Impure;
+import org.checkerframework.dataflow.qual.Pure;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -52,6 +54,7 @@ public class CurveClientMechanism extends Mechanism
 
     private final Errno errno;
 
+    @Impure
     public CurveClientMechanism(SessionBase session, Options options)
     {
         super(session, null, options);
@@ -76,6 +79,7 @@ public class CurveClientMechanism extends Mechanism
         errno = options.errno;
     }
 
+    @Impure
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
@@ -101,6 +105,7 @@ public class CurveClientMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public int processHandshakeCommand(Msg msg)
     {
@@ -123,6 +128,7 @@ public class CurveClientMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     @Override
     public Msg encode(Msg msg)
     {
@@ -162,6 +168,7 @@ public class CurveClientMechanism extends Mechanism
         return encoded;
     }
 
+    @Impure
     @Override
     public Msg decode(Msg msg)
     {
@@ -223,6 +230,7 @@ public class CurveClientMechanism extends Mechanism
         }
     }
 
+    @Pure
     @Override
     public Status status()
     {
@@ -237,12 +245,14 @@ public class CurveClientMechanism extends Mechanism
         }
     }
 
+    @Pure
     @Override
     public int zapMsgAvailable()
     {
         return 0;
     }
 
+    @Impure
     private int produceHello(Msg msg)
     {
         ByteBuffer helloNonce = ByteBuffer.allocate(Curve.Size.NONCE.bytes());
@@ -278,6 +288,7 @@ public class CurveClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int processWelcome(Msg msg)
     {
         if (msg.size() != 168) {
@@ -315,6 +326,7 @@ public class CurveClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int produceInitiate(Msg msg)
     {
         ByteBuffer vouchNonce = ByteBuffer.allocate(Curve.Size.NONCE.bytes());
@@ -384,6 +396,7 @@ public class CurveClientMechanism extends Mechanism
         return 0;
     }
 
+    @Impure
     private int processReady(Msg msg)
     {
         if (msg.size() < 30) {
@@ -418,6 +431,7 @@ public class CurveClientMechanism extends Mechanism
         return rc;
     }
 
+    @Impure
     private int processError(Msg msg)
     {
         if (state != State.EXPECT_WELCOME && state != State.EXPECT_READY) {
